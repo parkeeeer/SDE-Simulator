@@ -55,9 +55,10 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
-
-
+# CMake / build
 /build/
-/bin/
-/Debug/
-/Release/
+/cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+*.user

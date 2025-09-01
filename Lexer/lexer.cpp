@@ -11,9 +11,9 @@ std::vector<Token> Lexer::lex(){
             curr_pos++;
             continue;
         }
-        if(isdigit(curr)){
+        if(isdigit(curr) || curr == '.'){
             std::string num_str;
-            while(curr_pos < in.size() && isdigit(in[curr_pos])){
+            while(curr_pos < in.size() && (isdigit(in[curr_pos]) || in[curr_pos] == '.')){
                 num_str += in[curr_pos];
                 curr_pos++;
             }
@@ -54,6 +54,8 @@ std::vector<Token> Lexer::lex(){
                 tokens.emplace_back(TokenType::EXP,'^');
                 curr_pos++;
                 break;
+            default:
+                throw std::runtime_error(std::string("unexpected character at position ") + std::to_string(curr_pos) + ": '" + curr + "'");
         }
     }
 }

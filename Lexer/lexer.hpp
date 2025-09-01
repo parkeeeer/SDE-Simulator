@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string_view>
+#include <exception>
 #include "token.hpp"
 
 class Lexer{
