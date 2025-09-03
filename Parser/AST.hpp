@@ -2,54 +2,120 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <cmath>
+#include <algorithm>
+#include "Variable_Environment.hpp"
 
 
-//#define NodePtr std::unique_ptr<ASTNode>
+template<class Num> struct ASTNode;
 
-using NodePtr = std::unique_ptr<ASTNode>;
+template<class Num>
+using NodePtr = std::unique_ptr<ASTNode<Num>>;
 
+enum class BinOps{
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+    DIVIDE,
+    POWER
+};
 
+enum class FuncIds{
+    LOG,
+    EXP,
+    SQRT,
+    SIN,
+    COS,
+    TAN,
+    ABS,
+    MAX,
+    MIN
+};
 
+enum class UnarOps{
+    NEGATE
+};
+
+template<class Num>
 struct ASTNode{
     virtual ~ASTNode() = default;
-    virtual double eval() const = 0;
+    virtual Num eval(const Env_view<Num>& env) const = 0;
 };
 
-
-struct BinOpNode:public ASTNode{
-    BinOpNode(NodePtr l, NodePtr r, char o) noexcept : 
+template<class Num>
+struct BinOpNode:public ASTNode<Num>{
+    BinOpNode(NodePtr<Num> l, NodePtr<Num> r, BinOps o) noexcept : 
                                 left(std::move(l)), right(std::move(r)), op(o) {}
-    NodePtr left;
-    NodePtr right;
-    char op;
-    double eval() const override;
+    NodePtr<Num> left;
+    NodePtr<Num> right;
+    BinOps op;
+    Num eval(const Env_view<Num>& env) const override;
 };
 
-struct UnarOpNode: public ASTNode{
-    UnarOpNode(NodePtr c, char o) noexcept : child(std::move(c)), op(o) {}
-    NodePtr child;
-    char op;
-    double eval() const override;
+template<class Num>
+struct UnarOpNode: public ASTNode<Num>{
+    UnarOpNode(NodePtr<Num> c, UnarOps o) noexcept : child(std::move(c)), op(o) {}
+    NodePtr<Num> child;
+    UnarOps op;
+    Num eval(const Env_view<Num>& env) const override;
 };
 
-struct NumNode: public ASTNode{
-    NumNode(double v) : value(v) {}
-    double value;
-    double eval() const override;
+template<class Num, std::size_t numArgs>
+struct FuncNode: public ASTNode<Num>{
+    FuncNode(FuncIds id, std::array<NodePtr<Num>,numArgs> a) noexcept : func_id(id), args(std::move(a)) {}
+    FuncIds func_id;
+    std::array<NodePtr<Num>,numArgs> args;
+    Num eval(const Env_view<Num>& env) const override;
 };
 
-struct VarNode: public ASTNode{
-    VarNode(std::string n) noexcept : name(std::move(n)) {}
-    std::string name;
-    double eval() const override;
+template<class Num>
+struct NumNode: public ASTNode<Num>{
+    NumNode(Num v) : value(v) {}
+    Num value;
+    Num eval(const Env_view<Num>& env) const override;
+};
+
+template<class Num>
+struct ParamNode: public ASTNode<Num>{
+    ParamNode(std::string n,const Environment<Num>& env){
+        if(env.is_param(n)){
+            index = env.get_index(n);
+        }else{
+            throw std::runtime_error("parameter not found in environment: " + n);
+        }
+    }
+    std::size_t index;
+    Num eval(const Env_view<Num>& env) const override;
+};
+
+template<class Num>
+struct VarNode: public ASTNode<Num>{
+    VarNode(std::string& n) {
+        if(n == "X" || n == "x"){
+            index = state_X;
+        }else if(n == "t" || n == "T"){
+            index = state_t;
+        }else if(n == "dW" || n == "dw "){
+            index = state_dW;
+        }else{
+            throw std::runtime_error("state variable not found in environment: " + n);
+        }
+    }
+    state_vars index;
+    Num eval(const Env_view<Num>& env) const override;
 };
 
 
 
 
+//pretty thin wrapper around ASTNode, makes other things easier to handle with an obvious owner of the tree
+//also prevents copying because you shouldnt need to, so dont try to do that
+
+template<class Num>
 class AST{
 
-    NodePtr root;
+    NodePtr<Num> root;
 
     public:
     AST() = default; 
@@ -57,11 +123,13 @@ class AST{
     AST& operator=(const AST& in) = delete; // dont use
     AST(AST&&) noexcept = default;
     AST& operator=(AST&&) noexcept = default;
-    AST(NodePtr root) : root(std::move(root)) {}
-    double eval() const{
+    AST(NodePtr<Num> root) noexcept : root(std::move(root)) {}
+    
+    
+    Num eval(const Env_view<Num>& env) const{
         if(!root) throw std::runtime_error("root does not exist");
 
-        return root->eval();
+        return root->eval(env);
     }
 
 };

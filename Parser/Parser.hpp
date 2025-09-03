@@ -11,10 +11,10 @@
 
 
 
-
+template<class Num>
 class Parser{
 
 
     public:
-    AST parse(const std::vector<Token>& tokens);
+    AST<Num> parse(const std::vector<Token>& tokens);
 };

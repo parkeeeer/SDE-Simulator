@@ -12,8 +12,9 @@ enum class TokenType {
     DIVIDE,
     LPAREN,
     RPAREN,
-    VARIABLE,
+    IDENTIFIER,
     EXP,
+    COMMA,
     END
 };
 
@@ -45,14 +46,17 @@ struct Token{
             case TokenType::RPAREN:
                 std::cout << "RPAREN(" << value << ")";
                 break;
-            case TokenType::VARIABLE:
-                std::cout << "VARIABLE(" << value << ")";
+            case TokenType::IDENTIFIER:
+                std::cout << "IDENTIFIER(" << value << ")";
                 break;
             case TokenType::EXP:
                 std::cout << "EXP(" << value << ")";
                 break;
             case TokenType::END:
                 std::cout << "END(" << value << ")";
+                break;
+            case TokenType::COMMA:
+                std::cout << "COMMA(" << value << ")";
                 break;
         }
     }

@@ -21,37 +21,45 @@ std::vector<Token> Lexer::lex(){
             continue;
         }
         if(isalpha(curr)){
-            tokens.emplace_back(TokenType::VARIABLE,curr);
-            curr_pos++;
+            std::string id_str;
+            while(curr_pos < in.size() && (isalnum(in[curr_pos]) || in[curr_pos] == '_')){
+                id_str += in[curr_pos];
+                curr_pos++;
+            }
+            tokens.emplace_back(TokenType::IDENTIFIER,id_str);
             continue;
         }
         switch(curr){
             case '+':
-                tokens.emplace_back(TokenType::PLUS,'+');
+                tokens.emplace_back(TokenType::PLUS,"+");
                 curr_pos++;
                 break;
             case '-':
-                tokens.emplace_back(TokenType::MINUS,'-');
+                tokens.emplace_back(TokenType::MINUS,"-");
                 curr_pos++;
                 break;
             case '*':
-                tokens.emplace_back(TokenType::MULTIPLY,'*');
+                tokens.emplace_back(TokenType::MULTIPLY,"*");
                 curr_pos++;
                 break;
             case '/':
-                tokens.emplace_back(TokenType::DIVIDE,'/');
+                tokens.emplace_back(TokenType::DIVIDE,"/");
                 curr_pos++;
                 break;
             case '(':
-                tokens.emplace_back(TokenType::LPAREN,'(');
+                tokens.emplace_back(TokenType::LPAREN,"(");
                 curr_pos++;
                 break;
             case ')':
-                tokens.emplace_back(TokenType::RPAREN,')');
+                tokens.emplace_back(TokenType::RPAREN,")");
                 curr_pos++;
                 break;
             case '^':
-                tokens.emplace_back(TokenType::EXP,'^');
+                tokens.emplace_back(TokenType::EXP,"^");
+                curr_pos++;
+                break;
+            case ',':
+                tokens.emplace_back(TokenType::COMMA,",");
                 curr_pos++;
                 break;
             default:
