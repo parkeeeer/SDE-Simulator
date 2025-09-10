@@ -143,9 +143,8 @@ NodePtr<Num> Parser<Num>::parse_ident(){
 
     }else if(env.is_param(name)){
         return std::make_unique<NumNode<Num>>(env.get_param(name));
-    }else{
-        return std::make_unique<VarNode<Num>>(name);
     }
+    return std::make_unique<VarNode<Num>>(name);
 }
 
 template class Parser<double>;

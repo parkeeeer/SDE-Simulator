@@ -37,9 +37,9 @@ std::vector<Token> Lexer::lex(){
             tokens.emplace_back(TokenType::NUMBER,num_str);
             continue;
         }
-        if(isalpha(curr)){
+        if(isalpha(curr) || curr == '_'){
             std::string id_str;
-            while(curr_pos < in.size() && (isalpha(in[curr_pos]) || in[curr_pos] == '_')){
+            while(curr_pos < in.size() && (isalpha(in[curr_pos]) || in[curr_pos] == '_' || isdigit(in[curr_pos]))){
                 id_str += in[curr_pos];
                 curr_pos++;
             }

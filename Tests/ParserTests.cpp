@@ -47,10 +47,10 @@ TEST_CASE("unary start test"){
 }
 
 TEST_CASE("parameter test"){
-    Lexer l("parama + paramb * paramc");
+    Lexer l("param1 + paramb * paramc");
     std::vector<Token> tokens = l.lex();
     Environment<double> env;
-    env.add_param("parama", 4.0);
+    env.add_param("param1", 4.0);
     env.add_param("paramb", 2.0);
     env.add_param("paramc", 7.0);
     Parser<double> p(env,tokens);
