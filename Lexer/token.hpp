@@ -60,4 +60,8 @@ struct Token{
                 break;
         }
     }
+
+    bool operator==(const Token& other) const{
+        return type == other.type && value == other.value;
+    }
 };

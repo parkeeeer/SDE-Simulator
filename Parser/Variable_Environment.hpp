@@ -11,7 +11,7 @@ enum state_vars:std::size_t{
     state_dW = 2
 };
 
-//lightweight view into the environment for read-only access
+//lightweight view into the environment for read-only
 template<class Num>
 struct Env_view{
     const Num* parameters;
@@ -29,12 +29,20 @@ class Environment{
     std::vector<Num> state_vars;
     std::size_t next_index;
     public:
-    Environment() : next_index(0) {
+    Environment() : next_index(0), state_vars(3,0) {
         
     }
 
     std::size_t get_index(const std::string& name) const{
         return index_map.at(name);
+    }
+
+    Num get_param(const std::string& name) const{
+        if(is_param(name)){
+            return params[index_map.at(name)];
+        }else{
+            throw std::runtime_error("parameter not found in environment: " + name);
+        }
     }
 
 
@@ -50,6 +58,16 @@ class Environment{
 
     Env_view<Num> get_view() const {
         return Env_view<Num>{params.data(), state_vars.data()};
+    }
+
+    void update_state(Num new_X, Num new_t, Num new_dW){
+        state_vars[state_X] = new_X;
+        state_vars[state_t] = new_t;
+        state_vars[state_dW] = new_dW;
+    }
+
+    void set_dt(Num dt){
+        add_param("dt", dt);
     }
 };
 

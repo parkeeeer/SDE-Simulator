@@ -41,41 +41,36 @@ inline Num NumNode<Num>::eval(const Env_view<Num>& env) const{
 }
 
 
-template<class Num, std::size_t N>
-Num FuncNode<Num, N>::eval(const Env_view<Num>& env) const{
-    std::array<Num, args.size()> evaluated_args;
-    for(const NodePtr<Num>& arg : args){
-        if(!arg){
-            throw std::runtime_error("function argument is null");
-        }
-        evaluated_args.push_back(arg->eval(env));
-    }
+template<class Num>
+Num FuncNode<Num>::eval(const Env_view<Num>& env) const{
     switch(func_id){
         case FuncIds::LOG:
-            if(evaluated_args.size() != 1) throw std::runtime_error("log function takes 1 argument");
-            return std::log(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("log function takes 1 argument");
+            return std::log(args[0]->eval(env));
         case FuncIds::EXP:
-            if(evaluated_args.size() != 1) throw std::runtime_error("exp function takes 1 argument");
-            return exp(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("exp function takes 1 argument");
+            return exp(args[0]->eval(env));
         case FuncIds::SQRT:
-            if(evaluated_args.size() != 1) throw std::runtime_error("sqrt function takes 1 argument");
-            return std::sqrt(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("sqrt function takes 1 argument");
+            return std::sqrt(args[0]->eval(env));
         case FuncIds::SIN:
-            if(evaluated_args.size() != 1) throw std::runtime_error("sin function takes 1 argument");
-            return std::sin(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("sin function takes 1 argument");
+            return std::sin(args[0]->eval(env));
         case FuncIds::COS:
-            if(evaluated_args.size() != 1) throw std::runtime_error("cos function takes 1 argument");
-            return std::cos(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("cos function takes 1 argument");
+            return std::cos(args[0]->eval(env));
         case FuncIds::TAN:
-            if(evaluated_args.size() != 1) throw std::runtime_error("tan function takes 1 argument");
-            return std::tan(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("tan function takes 1 argument");
+            return std::tan(args[0]->eval(env));
         case FuncIds::ABS:
-            if(evaluated_args.size() != 1) throw std::runtime_error("abs function takes 1 argument");
-            return std::abs(evaluated_args[0]);
+            if(args.size() != 1) throw std::runtime_error("abs function takes 1 argument");
+            return std::abs(args[0]->eval(env));
         case FuncIds::MAX:
-            return *std::max_element(evaluated_args.begin(), evaluated_args.end());
+            if(args.size() != 2) throw std::runtime_error("max function takes 2 arguments");
+            return std::max(args[0]->eval(env), args[1]->eval(env));
         case FuncIds::MIN:
-            return *std::min_element(evaluated_args.begin(), evaluated_args.end());
+            if(args.size() != 2) throw std::runtime_error("min function takes 2 arguments");
+            return std::min(args[0]->eval(env), args[1]->eval(env));
     }
 }
 
@@ -88,3 +83,17 @@ template<class Num>
 Num VarNode<Num>::eval(const Env_view<Num>& env) const{
     return env.state_vars[index];
 }
+
+template class BinOpNode<double>;
+template class UnarOpNode<double>;
+template class FuncNode<double>;
+template class NumNode<double>;
+template class ParamNode<double>;
+template class VarNode<double>;
+
+template class BinOpNode<float>;
+template class UnarOpNode<float>;
+template class FuncNode<float>;
+template class NumNode<float>;
+template class ParamNode<float>;
+template class VarNode<float>;
