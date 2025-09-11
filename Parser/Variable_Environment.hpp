@@ -14,8 +14,7 @@ enum state_vars:std::size_t{
 //lightweight view into the environment for read-only
 template<class Num>
 struct Env_view{
-    const Num* parameters;
-    const Num* state_vars;
+    const Num* state;
 };
 
 //environment for variables/parameters in the expression
@@ -57,7 +56,7 @@ class Environment{
     }
 
     Env_view<Num> get_view() const {
-        return Env_view<Num>{params.data(), state_vars.data()};
+        return Env_view<Num>{state_vars.data()};
     }
 
     void update_state(Num new_X, Num new_t, Num new_dW){
