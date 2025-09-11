@@ -23,3 +23,14 @@ target_link_libraries(ParserTests PUBLIC SDE-Parser)
 target_compile_features(ParserTests PRIVATE cxx_std_20)
 
 doctest_discover_tests(ParserTests TEST_PREFIX "parser.")
+
+add_executable(CompilerTests
+  ${CMAKE_CURRENT_SOURCE_DIR}/CompilerTests.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_main.cpp
+)
+target_include_directories(CompilerTests PRIVATE ${CMAKE_SOURCE_DIR}/Compiler) # so it sees Compiler/compiler.hpp
+target_link_libraries(CompilerTests PRIVATE doctest::doctest)
+target_link_libraries(CompilerTests PUBLIC SDE-Compiler)
+target_compile_features(CompilerTests PRIVATE cxx_std_20)
+
+doctest_discover_tests(CompilerTests TEST_PREFIX "compiler.")

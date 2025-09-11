@@ -15,27 +15,21 @@ class Lexer{
 
     std::vector<Token> lex();
 
-    static bool is_primary_tail(TokenType t) {
-        return t == TokenType::NUMBER || t == TokenType::IDENTIFIER || t == TokenType::RPAREN;
-    }
-    static bool is_primary_head(TokenType t) {
-        return t == TokenType::IDENTIFIER || t == TokenType::LPAREN;
-    }
-
+    
     static std::vector<Token> insert_implicit_mul(const std::vector<Token>& in) {
-        std::vector<Token> out;
-        out.reserve(in.size() * 2);
+        std::vector<Token> ret;
+        ret.reserve(in.size() * 2);
         for (size_t i = 0; i < in.size(); ++i) {
-            if (!out.empty()) {
-                const TokenType A = out.back().type;
+            if (!ret.empty()) {
+                const TokenType A = ret.back().type;
                 const TokenType B = in[i].type;
                 const bool looks_like_call = (A == TokenType::IDENTIFIER && B == TokenType::LPAREN);
-                if (is_primary_tail(A) && is_primary_head(B) && !looks_like_call) {
-                    out.push_back(Token{TokenType::MULTIPLY, "*"});
+                if ((A == TokenType::NUMBER || A == TokenType::IDENTIFIER || A == TokenType::RPAREN) && (B == TokenType::IDENTIFIER || B == TokenType::LPAREN) && !looks_like_call) {
+                    ret.push_back(Token{TokenType::MULTIPLY, "*"});
                 }
             }
-            out.push_back(in[i]);
+            ret.push_back(in[i]);
         }
-        return out;
+        return ret;
     }
 };
