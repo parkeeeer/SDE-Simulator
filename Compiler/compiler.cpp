@@ -1,10 +1,6 @@
 #include "compiler.hpp"
 
 
-template<class Num>
-Program<Num> Compiler<Num>::compile(const AST<Num>& ast){
-    
-}
 
 template<class Num>
 void Compiler<Num>::convert(ASTNode<Num>* node){
@@ -13,8 +9,13 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
         return;
     }
     if(auto b = dynamic_cast<VarNode<Num>*>(node)){
-        program.instrs.push_back(instruction{operation::PUSH_VAR, static_cast<uint32_t>(b->index)});
-        return;
+        if(b->index == state_X) {
+            program.instrs.push_back(instruction{operation::LOAD_X, 0});
+        } else if (b->index == state_t) {
+            program.instrs.push_back(instruction{operation::LOAD_T, 0});
+        } else if (b->index == state_dW) {
+            program.instrs.push_back(instruction{operation::LOAD_DW, 0});
+        }
     }
     if(auto c = dynamic_cast<BinOpNode<Num>*>(node)){
         convert(c->left.get());

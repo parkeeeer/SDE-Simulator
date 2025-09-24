@@ -74,26 +74,28 @@ Num FuncNode<Num>::eval(const Env_view<Num>& env) const{
     }
 }
 
+/*
 template<class Num>
 Num ParamNode<Num>::eval(const Env_view<Num>& env) const{
     return env.parameters[index];
 }
+*/
 
 template<class Num>
 Num VarNode<Num>::eval(const Env_view<Num>& env) const{
-    return env.state_vars[index];
+    return env.state[index];
 }
 
 template class BinOpNode<double>;
 template class UnarOpNode<double>;
 template class FuncNode<double>;
 template class NumNode<double>;
-template class ParamNode<double>;
+//template class ParamNode<double>;
 template class VarNode<double>;
 
 template class BinOpNode<float>;
 template class UnarOpNode<float>;
 template class FuncNode<float>;
 template class NumNode<float>;
-template class ParamNode<float>;
+//template class ParamNode<float>;
 template class VarNode<float>;

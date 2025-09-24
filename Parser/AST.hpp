@@ -77,6 +77,7 @@ struct NumNode: public ASTNode<Num>{
     Num eval(const Env_view<Num>& env) const override;
 };
 
+/*
 template<class Num>
 struct ParamNode: public ASTNode<Num>{
     ParamNode(std::string n,const Environment<Num>& env){
@@ -89,7 +90,7 @@ struct ParamNode: public ASTNode<Num>{
     std::size_t index;
     Num eval(const Env_view<Num>& env) const override;
 };
-
+*/
 template<class Num>
 struct VarNode: public ASTNode<Num>{
     VarNode(std::string& n) {

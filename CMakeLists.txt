@@ -13,6 +13,7 @@ target_compile_options(SDE-Simulator PRIVATE -Wall -Wextra -Wpedantic)
 
 add_subdirectory(Lexer)
 add_subdirectory(Parser)
+add_subdirectory(Compiler)
 
 
 include(CTest)

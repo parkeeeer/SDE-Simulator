@@ -10,7 +10,7 @@
 template<class Num>
 class Compiler{
     Program<Num> program;
-    uint32_t stack_size;
+    
 
     void convert(ASTNode<Num>* node);
 
@@ -25,14 +25,14 @@ class Compiler{
 
 
     public:
-    Compiler(const Environment<Num>& e) noexcept : env(e), stack_size(0) {}
+    Compiler() = default;
 
     Program<Num> compile(const AST<Num>& ast){
         convert(ast.get_root().get());
         return std::move(program);
     }
 
-    static Num run(const Program<Num>& program, const Env_view<Num>& env);
+    
 };
 
 
