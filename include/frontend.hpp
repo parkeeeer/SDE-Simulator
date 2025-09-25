@@ -24,4 +24,15 @@ AST<Num> parse_to_ast(const std::string& input, const Environment<Num>& env){
     return parser.parse();
 }
 
+
+template<class Num>
+Num run_bytecode(const Program<Num>& program, Num t, Num X, Num dW){
+    return program.run(t, X, dW);
+}
+
+template<class Num>
+Num run_AST(const AST<Num>& ast, Num t, Num X, Num dW){
+    return ast.run(t, X, dW);
+}
+
 }
