@@ -29,6 +29,7 @@ class Compiler{
 
     Program<Num> compile(const AST<Num>& ast){
         convert(ast.get_root().get());
+        program.compute_max_stack_size();
         return std::move(program);
     }
 
