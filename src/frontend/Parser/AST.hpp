@@ -8,6 +8,8 @@
 #include <vector>
 #include "Variable_Environment.hpp"
 
+namespace sde::frontend {
+
 
 template<class Num> struct ASTNode;
 
@@ -51,7 +53,7 @@ struct BinOpNode:public ASTNode<Num>{
     NodePtr<Num> left;
     NodePtr<Num> right;
     BinOps op;
-    Num eval(const Env_view<Num>& env) const override;
+    Num eval(Num dW, Num X, Num t) const override;
 };
 
 template<class Num>
@@ -59,7 +61,7 @@ struct UnarOpNode: public ASTNode<Num>{
     UnarOpNode(NodePtr<Num> c, UnarOps o) noexcept : child(std::move(c)), op(o) {}
     NodePtr<Num> child;
     UnarOps op;
-    Num eval(const Env_view<Num>& env) const override;
+    Num eval(Num dW, Num X, Num t) const override;
 };
 
 template<class Num>
@@ -67,14 +69,14 @@ struct FuncNode: public ASTNode<Num>{
     FuncNode(FuncIds id, std::vector<NodePtr<Num>> a) noexcept : func_id(id), args(std::move(a)) {}
     FuncIds func_id;
     std::vector<NodePtr<Num>> args;
-    Num eval(const Env_view<Num>& env) const override;
+    Num eval(Num dW, Num X, Num t) const override;
 };
 
 template<class Num>
 struct NumNode: public ASTNode<Num>{
     NumNode(Num v) : value(v) {}
     Num value;
-    Num eval(const Env_view<Num>& env) const override;
+    Num eval(Num dW, Num X, Num t) const override;
 };
 
 /*
@@ -105,7 +107,7 @@ struct VarNode: public ASTNode<Num>{
         }
     }
     state_vars index;
-    Num eval(const Env_view<Num>& env) const override;
+    Num eval(Num dW, Num X, Num t) const override;
 };
 
 
@@ -137,3 +139,5 @@ class AST{
     inline const NodePtr<Num>& get_root() const { return root; }
 
 };
+
+}
