@@ -7,7 +7,7 @@
 #include "lexer.hpp"
 
 
-
+using namespace sde::frontend;
 
 TEST_CASE("basic binary operator"){
     Lexer l("4+2*7-1/9^5");

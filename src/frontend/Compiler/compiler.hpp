@@ -5,7 +5,7 @@
 #include "Variable_Environment.hpp"
 #include "AST.hpp"
 
-
+namespace sde::frontend {
 
 template<class Num>
 class Compiler{
@@ -19,22 +19,21 @@ class Compiler{
         return static_cast<uint32_t>(program.constants.size() - 1);
     }
 
-
-
-
-
-
     public:
     Compiler() = default;
 
     Program<Num> compile(const AST<Num>& ast){
         convert(ast.get_root().get());
         program.compute_max_stack_size();
+        program.instrs.push_back(instruction{operation::DONE, 0});
         return std::move(program);
     }
 
     
 };
+
+
+}
 
 
 

@@ -1,6 +1,18 @@
 #include "Parser.hpp"
 
+#include "math.hpp"
 
+using namespace sde::frontend;
+
+template<class Num>
+bool check_const_args(const std::vector<NodePtr<Num>>& args){
+    for(const auto& arg : args){
+        if(!dynamic_cast<NumNode<Num>*>(arg.get())){
+            return false;
+        }
+    }
+    return true;
+}
 
 
 
@@ -37,10 +49,9 @@ NodePtr<Num> Parser<Num>::parse_binop_or_fold(NodePtr<Num> left, NodePtr<Num> ri
             case TokenType::MULTIPLY:
                 return std::make_unique<NumNode<Num>>(*a * *b);
             case TokenType::DIVIDE:
-                if(*b == 0) throw std::runtime_error("division by zero");
                 return std::make_unique<NumNode<Num>>(*a / *b);
             case TokenType::EXP:
-                return std::make_unique<NumNode<Num>>(std::pow(*a, *b));
+                return std::make_unique<NumNode<Num>>(math::pow(*a, *b));
             default:
                 throw std::runtime_error("unknown binary operator: " + std::to_string(static_cast<int>(op)));
         }
@@ -99,7 +110,7 @@ NodePtr<Num> Parser<Num>::parse_prefix(){
             return parse_unary_or_fold(std::move(right), TokenType::MINUS);
         }
         case TokenType::NUMBER: {
-            Num v = static_cast<Num>(std::stod(get().value));
+            Num v = static_cast<Num>(static_cast<concepts::lane_t<Num>>(std::stod(get().value)));
             return std::make_unique<NumNode<Num>>(v);
         }
         case TokenType::IDENTIFIER: {
@@ -121,8 +132,6 @@ template<class Num>
 NodePtr<Num> Parser<Num>::parse_ident(){
     std::string name = get().value;
     if(peek().type == TokenType::LPAREN){
-        //function call
-        //TODO: add folding support for functions with constant arguments
         std::optional<FuncIds> id_opt = func_map(name);
         if (!id_opt) throw std::runtime_error("unknown function: " + name);
         FuncIds id = *id_opt;
@@ -137,7 +146,13 @@ NodePtr<Num> Parser<Num>::parse_ident(){
                     break;
                 }
             }
+            if(args.size() != get_expected_num_args(id)){
+                throw std::runtime_error("function " + name + " expected " + std::to_string(get_expected_num_args(id)) + " arguments but got " + std::to_string(args.size()));
+            }
             expect(TokenType::RPAREN); get();
+            if(check_const_args(args)){
+                return std::make_unique<NumNode<Num>>(FuncNode<Num>(id, std::move(args)).eval(0,0));
+            }
             return std::make_unique<FuncNode<Num>>(id, std::move(args));
         }
 
@@ -147,5 +162,7 @@ NodePtr<Num> Parser<Num>::parse_ident(){
     return std::make_unique<VarNode<Num>>(name);
 }
 
-template class Parser<double>;
-template class Parser<float>;
+template class sde::frontend::Parser<double>;
+template class sde::frontend::Parser<float>;
+template class sde::frontend::Parser<stdx::native_simd<double>>;
+template class sde::frontend::Parser<stdx::native_simd<float>>;

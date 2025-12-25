@@ -7,14 +7,24 @@
 #include <cstdint>
 #include <stdexcept>
 
+#include "utils.hpp"
+
 #include "Variable_Environment.hpp"
 #include "token.hpp"
 #include "AST.hpp"
 
+namespace sde::frontend {
+
 template<class Num>
 class Parser{
     public:
-    Parser(const Environment<Num>& env, std::vector<Token>toks) noexcept : env(env), tokens(std::move(toks)), curr_pos(0) {}
+    Parser() = delete;
+    Parser(const Environment<Num>& env, std::vector<Token>&& toks) noexcept
+    : env(env), 
+    tokens(toks),
+    curr_pos(0) {}
+    
+    
     AST<Num> parse(){
         return AST<Num>(parse_expression(0));
     }
@@ -40,7 +50,7 @@ class Parser{
     //checks if num is a Numnode and returns the value of it if so, otherwise returns nullopt
     inline std::optional<Num> as_num(NodePtr<Num>& n) const {
         auto num = dynamic_cast<NumNode<Num>*>(n.get());
-        if(num) return num->value;
+        if(num) return *num->value;
         return std::nullopt;
     }
     inline int get_prec(const TokenType& t) const{
@@ -72,6 +82,24 @@ class Parser{
         if(name == "min") return FuncIds::MIN;
         return std::nullopt;
     }
+
+    size_t get_expected_num_args(FuncIds id){
+        switch(id){
+            case FuncIds::LOG:
+            case FuncIds::EXP:
+            case FuncIds::SQRT:
+            case FuncIds::SIN:
+            case FuncIds::COS:
+            case FuncIds::TAN:
+            case FuncIds::ABS:
+                return 1;
+            case FuncIds::MAX:
+            case FuncIds::MIN:
+                return 2;
+            default:
+                throw std::runtime_error("unknown function id: " + std::to_string(static_cast<int>(id)));
+        }
+    }
     //---------------
 
 
@@ -83,3 +111,5 @@ class Parser{
     NodePtr<Num> parse_ident();
     //---------------------------
 };
+
+}

@@ -4,7 +4,8 @@ project(SDE-Simulator LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
+
 
 
 add_executable(SDE-Simulator main.cpp)
@@ -15,6 +16,8 @@ add_subdirectory(src)
 
 
 target_link_libraries(SDE-Simulator PRIVATE SDE-Frontend)
+target_link_libraries(SDE-Simulator PRIVATE SDE-utils)
+target_link_libraries(SDE-Simulator PRIVATE SDE-engine)
 
 
 include(CTest)

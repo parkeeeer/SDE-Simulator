@@ -4,6 +4,9 @@
 #include <iostream>
 
 
+namespace sde::frontend {
+
+
 enum class TokenType {
     NUMBER,
     PLUS,
@@ -65,3 +68,5 @@ struct Token{
         return type == other.type && value == other.value;
     }
 };
+
+}

@@ -1,11 +1,14 @@
 #include "AST.hpp"
+#include "math.hpp"
+
+#include <experimental/bits/simd.h>
 
 using namespace sde::frontend;
 
 template<class Num>
-Num BinOpNode<Num>::eval(Num dW, Num X, Num t) const{
-    Num l = left->eval(dW, X, t);
-    Num r = right->eval(dW, X, t);
+Num BinOpNode<Num>::eval(Num X, Num t) const{
+    Num l = left->eval(X, t);
+    Num r = right->eval(X, t);
     switch(op){
         case BinOps::ADD:
             return l + r;
@@ -14,10 +17,9 @@ Num BinOpNode<Num>::eval(Num dW, Num X, Num t) const{
         case BinOps::MULTIPLY:
             return l * r;
         case BinOps::DIVIDE:
-            if(r == 0) throw std::runtime_error("division by zero");
             return l / r;
         case BinOps::POWER:
-            return std::pow(l, r);
+            return math::pow(l, r);
         //default:
             //throw std::runtime_error("unknown binary operator: " + op);
     }
@@ -25,8 +27,8 @@ Num BinOpNode<Num>::eval(Num dW, Num X, Num t) const{
 }
 
 template<class Num>
-Num UnarOpNode<Num>::eval(Num dW, Num X, Num t) const{
-    Num operand = child->eval(dW, X, t);
+Num UnarOpNode<Num>::eval(Num X, Num t) const{
+    Num operand = child->eval(X, t);
 
     switch(op){
         case UnarOps::NEGATE:
@@ -37,41 +39,38 @@ Num UnarOpNode<Num>::eval(Num dW, Num X, Num t) const{
 }
 
 template<class Num>
-inline Num NumNode<Num>::eval(Num dW, Num X, Num t) const{
-    return value;
+inline Num NumNode<Num>::eval(Num X, Num t) const{
+    return *value;
 }
 
 
 template<class Num>
-Num FuncNode<Num>::eval(Num dW, Num X, Num t) const{
+Num FuncNode<Num>::eval(Num X, Num t) const{
     switch(func_id){
         case FuncIds::LOG:
-            if(args.size() != 1) throw std::runtime_error("log function takes 1 argument");
-            return std::log(args[0]->eval(dW, X, t));
+            return math::log(args[0]->eval(X, t));
         case FuncIds::EXP:
-            if(args.size() != 1) throw std::runtime_error("exp function takes 1 argument");
-            return exp(args[0]->eval(dW, X, t));
+            return math::exp(args[0]->eval(X, t));
         case FuncIds::SQRT:
-            if(args.size() != 1) throw std::runtime_error("sqrt function takes 1 argument");
-            return std::sqrt(args[0]->eval(dW, X, t));
+            return math::sqrt(args[0]->eval(X, t));
         case FuncIds::SIN:
-            if(args.size() != 1) throw std::runtime_error("sin function takes 1 argument");
-            return std::sin(args[0]->eval(dW, X, t));
+            return math::sin(args[0]->eval(X, t));
         case FuncIds::COS:
-            if(args.size() != 1) throw std::runtime_error("cos function takes 1 argument");
-            return std::cos(args[0]->eval(dW, X, t));
+            return math::cos(args[0]->eval(X, t));
         case FuncIds::TAN:
-            if(args.size() != 1) throw std::runtime_error("tan function takes 1 argument");
-            return std::tan(args[0]->eval(dW, X, t));
+            return math::tan(args[0]->eval(X, t));
         case FuncIds::ABS:
-            if(args.size() != 1) throw std::runtime_error("abs function takes 1 argument");
-            return std::abs(args[0]->eval(dW, X, t));
+            return math::abs(args[0]->eval(X, t));
         case FuncIds::MAX:
-            if(args.size() != 2) throw std::runtime_error("max function takes 2 arguments");
-            return std::max(args[0]->eval(dW, X, t), args[1]->eval(dW, X, t));
+            return math::max(args[0]->eval(X, t), args[1]->eval(X, t));
         case FuncIds::MIN:
-            if(args.size() != 2) throw std::runtime_error("min function takes 2 arguments");
-            return std::min(args[0]->eval(dW, X, t), args[1]->eval(dW, X, t));
+            return math::min(args[0]->eval(X, t), args[1]->eval(X, t));
+        case FuncIds::LSE_MAX:
+            return math::lse_max(args[0]->eval(X, t), args[1]->eval(X, t));
+        case FuncIds::LSE_MIN:
+            return math::lse_min(args[0]->eval(X, t), args[1]->eval(X, t));
+        case FuncIds::SOFTMAX:
+            return math::softmax_weight(args[0]->eval(X, t), args[1]->eval(X, t));
     }
 }
 
@@ -83,27 +82,115 @@ Num ParamNode<Num>::eval(const Env_view<Num>& env) const{
 */
 
 template<class Num>
-Num VarNode<Num>::eval(Num dW, Num X, Num t) const{
+Num VarNode<Num>::eval(Num X, Num t) const{
     switch(index){
         case state_X:
             return X;
         case state_t:
             return t;
-        case state_dW:
-            return dW;
     };
 }
 
-template class BinOpNode<double>;
-template class UnarOpNode<double>;
-template class FuncNode<double>;
-template class NumNode<double>;
-//template class ParamNode<double>;
-template class VarNode<double>;
+template<class Num>
+Num BinOpNode<Num>::safe_eval(Num X, Num t) const {
+    Num l = left->safe_eval(X, t);
+    Num r = right->safe_eval(X, t);
+    switch (op) {
+        case BinOps::ADD:
+            return l + r;
+            break;
+        case BinOps::SUBTRACT:
+            return l - r;
+            break;
+        case BinOps::MULTIPLY:
+            return l * r;
+            break;
+        case BinOps::DIVIDE:
+            return math::safe_div(l, r);
+        case BinOps::POWER:
+            return math::pow(l, r);
 
-template class BinOpNode<float>;
-template class UnarOpNode<float>;
-template class FuncNode<float>;
-template class NumNode<float>;
-//template class ParamNode<float>;
-template class VarNode<float>;
+    }
+}
+
+template<class Num>
+Num UnarOpNode<Num>::safe_eval(Num X, Num t) const {
+    Num operand = child->safe_eval(X, t);
+    switch (op) {
+        case UnarOps::NEGATE:
+            return -operand;
+    }
+}
+
+template<class Num>
+Num NumNode<Num>::safe_eval(Num X, Num t) const {
+    return *value;
+}
+
+template<class Num>
+Num FuncNode<Num>::safe_eval(Num X, Num t) const {
+    switch (func_id) {
+        case FuncIds::LOG:
+            return math::safe_log(args[0]->safe_eval(X, t));
+        case FuncIds::EXP:
+            return math::exp(args[0]->safe_eval(X, t));
+        case FuncIds::SQRT:
+            return math::safe_sqrt(args[0]->safe_eval(X,t));
+        case FuncIds::SIN:
+            return math::sin(args[0]->safe_eval(X, t));
+        case FuncIds::COS:
+            return math::cos(args[0]->safe_eval(X, t));
+        case FuncIds::TAN:
+            return math::tan(args[0]->safe_eval(X, t));
+        case FuncIds::ABS:
+            return math::abs(args[0]->safe_eval(X,t));
+        case FuncIds::MAX:
+            return math::max(args[0]->safe_eval(X, t), args[1]->safe_eval(X, t));
+        case FuncIds::MIN:
+            return math::min(args[0]->safe_eval(X, t), args[1]->safe_eval(X, t));
+        case FuncIds::LSE_MAX:
+            return math::lse_max(args[0]->safe_eval(X, t), args[1]->safe_eval(X, t));
+        case FuncIds::LSE_MIN:
+            return math::lse_min(args[0]->safe_eval(X, t), args[1]->safe_eval(X, t));
+        case FuncIds::SOFTMAX:
+            return math::softmax_weight(args[0]->safe_eval(X,t), args[1]->safe_eval(X,t));
+    }
+}
+
+template<class Num>
+Num VarNode<Num>::safe_eval(Num X, Num t) const {
+    switch (index) {
+        case state_X:
+            return X;
+        case state_t:
+            return t;
+    }
+}
+
+namespace sde::frontend {
+    template class BinOpNode<double>;
+    template class UnarOpNode<double>;
+    template class FuncNode<double>;
+    template class NumNode<double>;
+    //template class ParamNode<double>;
+    template class VarNode<double>;
+
+    template class BinOpNode<float>;
+    template class UnarOpNode<float>;
+    template class FuncNode<float>;
+    template class NumNode<float>;
+    //template class ParamNode<float>;
+    template class VarNode<float>;
+
+    template class BinOpNode<std::experimental::native_simd<float>>;
+    template class UnarOpNode<std::experimental::native_simd<float>>;
+    template class FuncNode<std::experimental::native_simd<float>>;
+    template class NumNode<std::experimental::native_simd<float>>;
+    template class VarNode<std::experimental::native_simd<float>>;
+
+    template class BinOpNode<std::experimental::native_simd<double>>;
+    template class UnarOpNode<std::experimental::native_simd<double>>;
+    template class FuncNode<std::experimental::native_simd<double>>;
+    template class NumNode<std::experimental::native_simd<double>>;
+    template class VarNode<std::experimental::native_simd<double>>;
+}

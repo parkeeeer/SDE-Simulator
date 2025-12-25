@@ -33,7 +33,10 @@ enum class FuncIds{
     TAN,
     ABS,
     MAX,
-    MIN
+    MIN,
+    LSE_MAX,
+    LSE_MIN,
+    SOFTMAX
 };
 
 enum class UnarOps{
@@ -43,7 +46,8 @@ enum class UnarOps{
 template<class Num>
 struct ASTNode{
     virtual ~ASTNode() = default;
-    virtual Num eval(const Env_view<Num>& env) const = 0;
+    virtual Num eval(Num X, Num t) const = 0;
+    virtual Num safe_eval(Num X, Num t) const = 0;
 };
 
 template<class Num>
@@ -53,7 +57,8 @@ struct BinOpNode:public ASTNode<Num>{
     NodePtr<Num> left;
     NodePtr<Num> right;
     BinOps op;
-    Num eval(Num dW, Num X, Num t) const override;
+    Num eval(Num X, Num t) const override;
+    Num safe_eval(Num X, Num t) const override;
 };
 
 template<class Num>
@@ -61,22 +66,25 @@ struct UnarOpNode: public ASTNode<Num>{
     UnarOpNode(NodePtr<Num> c, UnarOps o) noexcept : child(std::move(c)), op(o) {}
     NodePtr<Num> child;
     UnarOps op;
-    Num eval(Num dW, Num X, Num t) const override;
+    Num eval(Num X, Num t) const override;
+    Num safe_eval(Num X, Num t) const override;
 };
 
 template<class Num>
 struct FuncNode: public ASTNode<Num>{
-    FuncNode(FuncIds id, std::vector<NodePtr<Num>> a) noexcept : func_id(id), args(std::move(a)) {}
+    FuncNode(const FuncIds id, std::vector<NodePtr<Num>> a) noexcept : func_id(id), args(std::move(a)) {}
     FuncIds func_id;
     std::vector<NodePtr<Num>> args;
-    Num eval(Num dW, Num X, Num t) const override;
+    Num eval(Num X, Num t) const override;
+    Num safe_eval(Num X, Num t) const override;
 };
 
 template<class Num>
 struct NumNode: public ASTNode<Num>{
-    NumNode(Num v) : value(v) {}
-    Num value;
-    Num eval(Num dW, Num X, Num t) const override;
+    NumNode(Num v) : value(std::make_unique<Num>(v)) {}
+    std::unique_ptr<Num> value;
+    Num eval(Num X, Num t) const override;
+    Num safe_eval(Num X, Num t) const override;
 };
 
 /*
@@ -95,19 +103,18 @@ struct ParamNode: public ASTNode<Num>{
 */
 template<class Num>
 struct VarNode: public ASTNode<Num>{
-    VarNode(std::string& n) {
+    VarNode(const std::string& n) {
         if(n == "X" || n == "x"){
             index = state_X;
         }else if(n == "t" || n == "T"){
             index = state_t;
-        }else if(n == "dW" || n == "dw "){
-            index = state_dW;
         }else{
             throw std::runtime_error("state variable not found in environment: " + n);
         }
     }
     state_vars index;
-    Num eval(Num dW, Num X, Num t) const override;
+    Num eval(Num X, Num t) const override;
+    Num safe_eval(Num X, Num t) const override;
 };
 
 
@@ -127,13 +134,19 @@ class AST{
     AST& operator=(const AST& in) = delete; // dont use
     AST(AST&&) noexcept = default;
     AST& operator=(AST&&) noexcept = default;
-    AST(NodePtr<Num> root) noexcept : root(std::move(root)) {}
+    explicit AST(NodePtr<Num> root) noexcept : root(std::move(root)) {}
     
     
-    Num eval(const Env_view<Num>& env) const{
+    Num eval(Num X, Num t) const{
         if(!root) throw std::runtime_error("root does not exist");
 
-        return root->eval(env);
+        return root->eval(X, t);
+    }
+
+    Num safe_eval(Num X, Num t) const{
+        if(!root) throw std::runtime_error("root does not exist");
+
+        return root->safe_eval(X, t);
     }
 
     inline const NodePtr<Num>& get_root() const { return root; }

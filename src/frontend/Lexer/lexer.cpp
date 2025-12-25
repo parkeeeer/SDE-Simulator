@@ -1,5 +1,6 @@
 #include "lexer.hpp"
 
+using namespace sde::frontend;
 
 
 std::vector<Token> Lexer::lex(){

@@ -1,11 +1,11 @@
 #include "compiler.hpp"
 
-
+using namespace sde::frontend;
 
 template<class Num>
 void Compiler<Num>::convert(ASTNode<Num>* node){
     if(auto a = dynamic_cast<NumNode<Num>*>(node)){
-        program.instrs.push_back(instruction{operation::PUSH_CONST, add_const_and_return_index(a->value)});
+        program.instrs.push_back(instruction{operation::PUSH_CONST, add_const_and_return_index(*a->value)});
         return;
     }
     if(auto b = dynamic_cast<VarNode<Num>*>(node)){
@@ -13,8 +13,6 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
             program.instrs.push_back(instruction{operation::LOAD_X, 0});
         } else if (b->index == state_t) {
             program.instrs.push_back(instruction{operation::LOAD_T, 0});
-        } else if (b->index == state_dW) {
-            program.instrs.push_back(instruction{operation::LOAD_DW, 0});
         }
     }
     if(auto c = dynamic_cast<BinOpNode<Num>*>(node)){
@@ -85,5 +83,7 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
     }
 }
 
-template class Compiler<float>;
-template class Compiler<double>;
+template class sde::frontend::Compiler<float>;
+template class sde::frontend::Compiler<double>;
+template class sde::frontend::Compiler<stdx::native_simd<float>>;
+template class sde::frontend::Compiler<stdx::native_simd<double>>;

@@ -5,6 +5,9 @@
 #include <exception>
 #include "token.hpp"
 
+
+namespace sde::frontend {
+
 class Lexer{
     std::string_view in;
     size_t curr_pos;
@@ -33,3 +36,5 @@ class Lexer{
         return ret;
     }
 };
+
+} // namespace sde::frontend
