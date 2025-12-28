@@ -29,13 +29,23 @@
                 //needs to be correctly aligned!!!!!
                 constexpr size_t alignment = get_simd_alignment();
                 size_t aligned_size = ((n * sizeof(T) + alignment - 1) / alignment) * alignment;
-
-                void* ptr = std::aligned_alloc(alignment, aligned_size);
-                if (!ptr) throw std::bad_alloc();
-                return static_cast<T*>(ptr);
+                void* p;
+#ifdef _WIN32
+                p = _aligned_malloc(aligned_size, alignment);
+#else
+                posix_memalign(&p, alignment, aligned_size);
+#endif
+                if (!p) throw std::bad_alloc{};
+                return static_cast<T*>(p);
             }
 
-            void deallocate(T* p, size_t) { std::free(p); }
+            void deallocate(T* p, size_t) {
+#ifdef _WIN32
+                _aligned_free(p);
+#else
+                free(p);
+#endif
+            }
 
             bool operator==(const aligned_allocator&) const noexcept { return true; }
             bool operator!=(const aligned_allocator&) const noexcept { return false; }
