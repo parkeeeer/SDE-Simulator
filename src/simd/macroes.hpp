@@ -20,4 +20,8 @@
 #define HAS_AVX2 false
 #endif
 
-#ifdef
+#ifdef __SSE2__
+#define HAS_SSE2 true
+#else
+#define HAS_SSE2 false
+#endif

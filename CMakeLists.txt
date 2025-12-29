@@ -28,11 +28,6 @@ else()
   set(USE_CUDA OFF)
 endif()
 
-if(USE_CUDA)
-  target_link_libraries(SDE-Simulator INTERFACE CUDA::cudart CUDA::nvrtc)
-  target_compile_definitions(SDE-Simulator INTERFACE HAS_CUDA)
-endif()
-
 
 
 add_subdirectory(src)
@@ -41,9 +36,8 @@ target_link_libraries(SDE-Simulator INTERFACE SDE-Frontend SDE-utils SDE-engine)
 
 
 
-target_link_libraries(SDE-Simulator-main PRIVATE SDE-Frontend)
-target_link_libraries(SDE-Simulator-main PRIVATE SDE-utils)
-target_link_libraries(SDE-Simulator-main PRIVATE SDE-engine)
+target_link_libraries(SDE-Simulator-main PRIVATE SDE-Simulator)
+
 
 
 include(CTest)
@@ -62,7 +56,8 @@ if(BUILD_TESTING)
   endif()
 
   
-  add_library(doctest INTERFACE)
+  add_library(doctest INTERFACE
+          include/results.h)
   add_library(doctest::doctest ALIAS doctest)
   target_include_directories(doctest INTERFACE ${doctest_SOURCE_DIR})
 
