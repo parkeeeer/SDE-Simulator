@@ -26,11 +26,18 @@ namespace sde::engine::CPU {
 template<class Num>
 struct BytecodeEval{
     const sde::frontend::Program<Num>& program;
-    Num operator()(Num x, Num t) const noexcept{
-        thread_local memory::aligned_vector<Num> stack(program.get_max_stack_size());
-        if (program.get_max_stack_size() > stack.size()) {
-            stack.resize(program.get_max_stack_size());
-        }
+    memory::aligned_vector<Num> stack;
+
+    explicit BytecodeEval(const sde::frontend::Program<Num>& program) : program{program} {
+        stack.reserve(program.get_max_stack_size());
+    }
+
+    //preserve capacity
+    BytecodeEval(const BytecodeEval& other) : program{other.program} {
+        stack.reserve(other.stack.capacity());
+    }
+
+    Num operator()(Num x, Num t) noexcept{
         return program.run(x, t, stack.data());
     }
 };
@@ -46,11 +53,17 @@ struct ASTEval{
 template<class Num>
 struct BytecodeSafeEval {
     const sde::frontend::Program<Num>& program;
-    Num operator()(Num x, Num t) const noexcept{
-        thread_local std::vector<Num> stack(program.get_max_stack_size());
-        if (program.get_max_stack_size() > stack.size()) {
-            stack.resize(program.get_max_stack_size());
-        }
+    memory::aligned_vector<Num> stack;
+
+    explicit BytecodeSafeEval(const sde::frontend::Program<Num>& program) : program{program} {
+        stack.reserve(program.get_max_stack_size());
+    }
+
+    //preserve capacity
+    BytecodeSafeEval(const BytecodeSafeEval& other) : program{other.program} {
+        stack.reserve(other.stack.capacity());
+    }
+    Num operator()(Num x, Num t) noexcept{
         return program.safe_run(x, t, stack.data());
     }
 };
@@ -66,7 +79,7 @@ struct ASTSafeEval {
 template<class Num, sde::concepts::Evaluator<Num> Eval, class method>
 void dispatch_simulation(sde::Config& options, lane_t<Num>* paths, const Eval& a, const Eval& b, const Eval& b_prime, const method& meth, const size_t padded_paths){
 
-
+    std::cout << "simd size: " << get_lane_size<Num>() << '\n';
     const Num dt = static_cast<Num>(static_cast<lane_t<Num>>(options.dt));
     const Num sqrt_dt = math::sqrt(dt);
     const Num initial_value = static_cast<Num>(static_cast<lane_t<Num>>(options.initial_value));
@@ -86,23 +99,37 @@ void dispatch_simulation(sde::Config& options, lane_t<Num>* paths, const Eval& a
         meth(paths, 0, options.num_paths, a, b, b_prime, rng, bm_state, sqrt_dt, dt, options.num_steps, options.num_paths, initial_value, padded_paths);
         return;
     }
-    std::vector<std::jthread> threads;
+    std::vector<std::thread> threads;
     threads.reserve(num_threads);
 
     rng::BMstate<lane_t<Num>> base_state;
     rng::Xoshiro256Plus rng = rng::make_prng(options.seed);
+    const size_t num_paths = options.num_paths;
+    const size_t num_steps = options.num_steps;
     for(size_t i = 0; i < num_threads;i++){
         const size_t start = i * paths_per_thread;
         const size_t end = (i+1) * paths_per_thread;
+        //std::cout << "thread " << i << " paths: " << start<< " to " << end - 1 << std::endl;
 
-        threads.emplace_back([&,i,start,end, base_state, rng]{
-            meth(paths, start, end, a, b, b_prime, rng, base_state
-                                        ,sqrt_dt, dt, options.num_steps, options.num_paths, initial_value, padded_paths);});
+        auto paths_copy = paths;
+
+        threads.emplace_back([paths_copy, a, b, b_prime, &meth, sqrt_dt, dt, num_steps, num_paths, initial_value,padded_paths, i,start,end, base_state, rng]{
+
+            meth(paths_copy, start, end, a, b, b_prime, rng, base_state
+                                            ,sqrt_dt, dt, num_steps, num_paths, initial_value, padded_paths);
+            });
         rng.jump();
     }
     if (num_threads * paths_per_thread < padded_paths) {
-        meth(paths, num_threads * paths_per_thread, padded_paths - 1, a, b, b_prime, rng, base_state, sqrt_dt, dt, options.num_steps, options.num_paths, initial_value, padded_paths);
+        //std::cout << "final thread, paths : " << num_threads * paths_per_thread << " to " << padded_paths - 1 << std::endl;
+        meth(paths, num_threads * paths_per_thread, padded_paths, a, b, b_prime, rng, base_state, sqrt_dt, dt, options.num_steps, options.num_paths, initial_value, padded_paths);
     }
+    std::cout << "joining threads\n";
+    for (size_t i = 0; i < num_threads; i++) {
+        threads[i].join();
+        std::cout << "thread " << i << " thread stopped\n";
+    }
+    std::cout << "leaving simulator\n";
 }
 
 }

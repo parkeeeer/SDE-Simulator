@@ -24,6 +24,15 @@
         template<sde::concepts::fp_or_simd T>
         struct aligned_allocator {
             using value_type = T;
+
+            template<typename U>
+            struct rebind {
+                using other = aligned_allocator<U>;
+            };
+
+            template<typename U>
+            aligned_allocator(const aligned_allocator<U>&) noexcept {}
+            aligned_allocator() noexcept {}
             T* allocate(size_t n) {
 
                 //needs to be correctly aligned!!!!!

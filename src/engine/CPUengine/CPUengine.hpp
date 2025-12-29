@@ -40,20 +40,20 @@ namespace sde::engine::CPU {
 
     template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
     void euler_maruyama_runner(lane_t<Num>* paths, const size_t first_path_num, const size_t path_end,
-                                const Eval& a, const Eval& b, const Eval& b_prime,
+                                Eval a, Eval b, Eval b_prime,
                                 sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                                 const Num sqrt_dt, const Num dt, const size_t num_steps, const size_t num_paths, const Num initial_value, const size_t padded_paths) noexcept;
 
     template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
     void milstein_runner(lane_t<Num>* paths, size_t first_path_num, size_t path_end, 
-                                  const Eval& a, const Eval& b, const Eval& b_prime,
+                                  Eval a, Eval b, Eval b_prime,
                                   sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                                   const Num sqrt_dt, const Num dt, const size_t num_steps, const size_t num_paths, const Num initial_value, const size_t padded_paths) noexcept;
 
     struct euler_functor{
         template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
         void operator()(lane_t<Num>* paths, const size_t first_path_num, const size_t path_end,
-                                const Eval& a, const Eval& b, const Eval& b_prime,
+                                Eval a, Eval b, Eval b_prime,
                                 sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                                 const Num sqrt_dt, const Num dt, const size_t num_steps, const size_t num_paths, const Num initial_value, const size_t padded_paths) const noexcept {
             euler_maruyama_runner(paths, first_path_num, path_end, a, b, b_prime, rng, state, sqrt_dt, dt, num_steps, num_paths, initial_value, padded_paths);
@@ -63,7 +63,7 @@ namespace sde::engine::CPU {
     struct milstein_functor{
         template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
         void operator()(lane_t<Num>* paths, size_t first_path_num, size_t path_end,
-                                const Eval& a, const Eval& b, const Eval& b_prime,
+                                Eval a, Eval b, Eval b_prime,
                                 sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                                 Num sqrt_dt, Num dt, size_t num_steps, size_t num_paths, Num initial_value, const size_t padded_paths) const noexcept {
             milstein_runner(paths, first_path_num, path_end, a, b, b_prime, rng, state, sqrt_dt, dt, num_steps, num_paths, initial_value, padded_paths);
@@ -90,7 +90,7 @@ constexpr bool is_simd(){
 
 template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
 void sde::engine::CPU::euler_maruyama_runner(lane_t<Num>* paths, const size_t first_path_num, const size_t path_end,
-                    const Eval& a, const Eval& b, const Eval& b_prime,
+                    Eval a, Eval b, Eval b_prime,
                     sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                     const Num sqrt_dt, const Num dt, const size_t num_steps, const size_t num_paths, const Num initial_value, const size_t padded_paths) noexcept {
   (void) b_prime;
@@ -130,7 +130,7 @@ void sde::engine::CPU::euler_maruyama_runner(lane_t<Num>* paths, const size_t fi
 
 template<sde::concepts::fp_or_simd Num, sde::concepts::Evaluator<Num> Eval>
 void sde::engine::CPU::milstein_runner(lane_t<Num>* paths, const size_t first_path_num, const size_t path_end,
-                                  const Eval& a, const Eval& b, const Eval& b_prime,
+                                  Eval a, Eval b, Eval b_prime,
                                   sde::rng::Xoshiro256Plus rng, sde::rng::BMstate<lane_t<Num>> state,
                                   const Num sqrt_dt, const Num dt, const size_t num_steps, const size_t num_paths, const Num initial_value, const size_t padded_paths) noexcept{
   constexpr int lane_size = get_lane_size<Num>();
@@ -161,6 +161,7 @@ void sde::engine::CPU::milstein_runner(lane_t<Num>* paths, const size_t first_pa
         paths[idx] = new_lane;
       }
     }
-  }                                 
+  }
+  std::cout << path_end << '\n';
 }
 

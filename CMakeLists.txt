@@ -6,18 +6,44 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+
+#set
+
+add_executable(SDE-Simulator-main main.cpp)
+target_compile_options(SDE-Simulator-main PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(SDE-Simulator-main PRIVATE -mavx2)
 
 
-add_executable(SDE-Simulator main.cpp)
-target_compile_options(SDE-Simulator PRIVATE -Wall -Wextra -Wpedantic)
+add_library(SDE-Simulator INTERFACE)
+
+
+find_package(CUDAToolkit QUIET)
+
+
+
+if(CUDAToolkit_FOUND)
+  set(USE_CUDA ON)
+else()
+  set(USE_CUDA OFF)
+endif()
+
+if(USE_CUDA)
+  target_link_libraries(SDE-Simulator INTERFACE CUDA::cudart CUDA::nvrtc)
+  target_compile_definitions(SDE-Simulator INTERFACE HAS_CUDA)
+endif()
+
+
 
 add_subdirectory(src)
 
+target_link_libraries(SDE-Simulator INTERFACE SDE-Frontend SDE-utils SDE-engine)
 
 
-target_link_libraries(SDE-Simulator PRIVATE SDE-Frontend)
-target_link_libraries(SDE-Simulator PRIVATE SDE-utils)
-target_link_libraries(SDE-Simulator PRIVATE SDE-engine)
+
+target_link_libraries(SDE-Simulator-main PRIVATE SDE-Frontend)
+target_link_libraries(SDE-Simulator-main PRIVATE SDE-utils)
+target_link_libraries(SDE-Simulator-main PRIVATE SDE-engine)
 
 
 include(CTest)
@@ -46,4 +72,5 @@ if(BUILD_TESTING)
 
   add_subdirectory(Tests)
 endif()
+
 

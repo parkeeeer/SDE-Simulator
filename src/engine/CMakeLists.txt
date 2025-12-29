@@ -1,5 +1,8 @@
 add_subdirectory(CPUengine)
-#add_subdirectory(GPUengine)
+if(USE_CUDA)
+    add_subdirectory(CUDAEngine)
+endif()
+
 
 add_library(SDE-engine STATIC
         dispatch.cpp
