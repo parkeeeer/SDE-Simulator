@@ -32,7 +32,7 @@
 
             template<typename U>
             aligned_allocator(const aligned_allocator<U>&) noexcept {}
-            aligned_allocator() noexcept = default
+            aligned_allocator() noexcept = default;
             T* allocate(size_t n) {
 
                 //needs to be correctly aligned!!!!!
