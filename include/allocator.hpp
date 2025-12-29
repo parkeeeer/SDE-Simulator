@@ -32,7 +32,7 @@
 
             template<typename U>
             aligned_allocator(const aligned_allocator<U>&) noexcept {}
-            aligned_allocator() noexcept {}
+            aligned_allocator() noexcept = default
             T* allocate(size_t n) {
 
                 //needs to be correctly aligned!!!!!
@@ -42,7 +42,9 @@
 #ifdef _WIN32
                 p = _aligned_malloc(aligned_size, alignment);
 #else
-                posix_memalign(&p, alignment, aligned_size);
+                if (posix_memalign(&p, alignment, aligned_size) != 0) {
+                    p = nullptr;
+                }
 #endif
                 if (!p) throw std::bad_alloc{};
                 return static_cast<T*>(p);
