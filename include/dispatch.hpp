@@ -2,6 +2,7 @@
 #include <thread>
 #include "allocator.hpp"
 #include "frontend.hpp"
+#include "results.h"
 
 
 namespace sde {
@@ -47,11 +48,11 @@ namespace sde {
 
 
     template<concepts::FloatingPoint Num>
-    memory::aligned_vector<Num> bytecode_dispatch(Config& config);
+    array2d<Num> bytecode_dispatch(Config& config);
 
     template<concepts::FloatingPoint Num>
-    memory::aligned_vector<Num> AST_dispatch(Config& config);
+    array2d<Num> AST_dispatch(Config& config);
 
     template<concepts::FloatingPoint Num>
-    memory::aligned_vector<Num> GPU_dispatch(Config& config);
+    array2d<Num> GPU_dispatch(Config& config);
 }

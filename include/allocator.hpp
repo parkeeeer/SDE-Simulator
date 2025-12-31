@@ -50,7 +50,7 @@
                 return static_cast<T*>(p);
             }
 
-            void deallocate(T* p, size_t) {
+            void deallocate(T* p, size_t = 0) {
 #ifdef _WIN32
                 _aligned_free(p);
 #else

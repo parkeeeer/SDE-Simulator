@@ -12,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 add_executable(SDE-Simulator-main main.cpp)
 target_compile_options(SDE-Simulator-main PRIVATE -Wall -Wextra -Wpedantic)
-target_compile_options(SDE-Simulator-main PRIVATE -mavx2)
+#target_compile_options(SDE-Simulator-main PRIVATE -mavx2)
 
 
 add_library(SDE-Simulator INTERFACE)
