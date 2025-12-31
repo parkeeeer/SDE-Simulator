@@ -162,6 +162,5 @@ void sde::engine::CPU::milstein_runner(lane_t<Num>* paths, const size_t first_pa
       }
     }
   }
-  std::cout << path_end << '\n';
 }
 

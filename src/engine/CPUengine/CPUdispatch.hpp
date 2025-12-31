@@ -79,7 +79,7 @@ struct ASTSafeEval {
 template<class Num, sde::concepts::Evaluator<Num> Eval, class method>
 void dispatch_simulation(sde::Config& options, lane_t<Num>* paths, const Eval& a, const Eval& b, const Eval& b_prime, const method& meth, const size_t padded_paths){
 
-    std::cout << "simd size: " << get_lane_size<Num>() << '\n';
+
     const Num dt = static_cast<Num>(static_cast<lane_t<Num>>(options.dt));
     const Num sqrt_dt = math::sqrt(dt);
     const Num initial_value = static_cast<Num>(static_cast<lane_t<Num>>(options.initial_value));
@@ -109,7 +109,7 @@ void dispatch_simulation(sde::Config& options, lane_t<Num>* paths, const Eval& a
     for(size_t i = 0; i < num_threads;i++){
         const size_t start = i * paths_per_thread;
         const size_t end = (i+1) * paths_per_thread;
-        //std::cout << "thread " << i << " paths: " << start<< " to " << end - 1 << std::endl;
+
 
         auto paths_copy = paths;
 
@@ -121,15 +121,15 @@ void dispatch_simulation(sde::Config& options, lane_t<Num>* paths, const Eval& a
         rng.jump();
     }
     if (num_threads * paths_per_thread < padded_paths) {
-        //std::cout << "final thread, paths : " << num_threads * paths_per_thread << " to " << padded_paths - 1 << std::endl;
+
         meth(paths, num_threads * paths_per_thread, padded_paths, a, b, b_prime, rng, base_state, sqrt_dt, dt, options.num_steps, options.num_paths, initial_value, padded_paths);
     }
-    std::cout << "joining threads\n";
+
     for (size_t i = 0; i < num_threads; i++) {
         threads[i].join();
-        std::cout << "thread " << i << " thread stopped\n";
+
     }
-    std::cout << "leaving simulator\n";
+
 }
 
 }
