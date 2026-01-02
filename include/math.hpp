@@ -19,6 +19,15 @@ namespace sde::math {
         }
     }
 
+    template<concepts::fp_or_simd Num>
+    constexpr concepts::lane_t<Num> scalar_extract(const Num& val) {
+        if constexpr(concepts::is_native_simd<Num>::value) {
+            return val[0];
+        } else {
+            return val;
+        }
+    }
+
     //returns epsilon gor the given type(smallest increment for said type)
     template<concepts::fp_or_simd Num>
     consteval Num epsilon(){
