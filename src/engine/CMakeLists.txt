@@ -8,6 +8,13 @@ add_library(SDE-engine STATIC
         dispatch.cpp
 )
 
+if(USE_CUDA)
+    target_compile_definitions(SDE-engine PRIVATE HAS_CUDA=1)
+else()
+    target_compile_definitions(SDE-engine PRIVATE HAS_CUDA=0)
+endif()
+
+
 target_include_directories(SDE-engine PUBLIC ${CMAKE_SOURCE_DIR}/include
                                       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
