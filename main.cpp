@@ -1,35 +1,28 @@
 #include<iostream>
 
 #include "dispatch.hpp"
-#include "allocator.hpp"
+#include <CudaCodegen.hpp>
 
 
 
 
 int main() {
     sde::Config config;
-    config.use_simd = true;
-    //config.threads = 2;
-    config.num_steps = 100;
+    config.diffusion = "sqrt(x*t)";
+    config.drift = "t";
     config.num_paths = 100;
+    config.num_steps = 1000;
     config.dt = .1;
-    config.initial_value = 0;
-    config.diffusion = "1";
-    config.drift = "0";
-    config.safe = true;
-    config.initial_value = 0.0;
-    config.method = sde::Method::MILSTEIN;
+    //config.precision = sde::precision_level::single_precision;
 
-    auto results = sde::bytecode_dispatch<double>(config);
-
-
-    std::cout << "results: " << std::endl;
-    for (size_t i = 0;i < config.num_steps;++i) {
+    sde::array2d<float> results = sde::GPU_dispatch<float>(config);
+    for (size_t i = 0; i < config.num_paths; ++i) {
         std::cout << "path " << i << ": ";
-        for (size_t j = 0;j < config.num_paths;++j) {
-            std::cout << results[i][j] << ' ';
+        for (size_t j = 0; j < config.num_steps; ++j) {
+            std::cout << results(i, j) << ' ';
         }
-        std:: cout << '\n';
+        std::cout << '\n';
     }
+
     return 0;
 }

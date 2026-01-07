@@ -20,8 +20,6 @@ add_library(SDE-Simulator INTERFACE)
 
 find_package(CUDAToolkit QUIET)
 
-
-
 if(CUDAToolkit_FOUND)
   set(USE_CUDA ON)
 else()
@@ -29,8 +27,8 @@ else()
 endif()
 
 
-
 add_subdirectory(src)
+
 
 target_link_libraries(SDE-Simulator INTERFACE SDE-Frontend SDE-utils SDE-engine)
 
