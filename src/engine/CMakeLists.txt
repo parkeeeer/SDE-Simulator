@@ -1,7 +1,7 @@
 add_subdirectory(CPUengine)
-if(USE_CUDA)
+#if(USE_CUDA)
     add_subdirectory(CUDAEngine)
-endif()
+#endif()
 
 
 add_library(SDE-engine STATIC
