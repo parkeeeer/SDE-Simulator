@@ -141,7 +141,7 @@ array2d<Num> sde::GPU_dispatch(Config& config) {
 }
 #else
 template<concepts::FloatingPoint Num>
-array2d<Num> sde::GPU_dispatch(config& config) {
+array2d<Num> sde::GPU_dispatch(Config& config) {
     throw std::runtime_error("No supported platforms are currently available");
 }
 #endif
@@ -158,8 +158,10 @@ sde::AST_dispatch<double>(sde::Config&);
 template array2d<float>
 sde::AST_dispatch<float>(sde::Config&);
 
+#if HAS_CUDA
 template array2d<double>
 sde::GPU_dispatch<double>(sde::Config&);
 
 template array2d<float>
 sde::GPU_dispatch<float>(sde::Config&);
+#endif
