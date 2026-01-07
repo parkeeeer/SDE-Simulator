@@ -115,7 +115,6 @@ namespace sde::simd {
         SIMD_INLINE simd& operator/=(const simd& other);
 
         SIMD_INLINE float operator[](size_t i) const;
-
     };
 
     template<>
@@ -144,6 +143,7 @@ namespace sde::simd {
         SIMD_INLINE simd& operator/=(const simd& other);
 
         SIMD_INLINE double operator[](size_t i) const;
+
 
     };
 }
