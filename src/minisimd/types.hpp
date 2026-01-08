@@ -93,6 +93,8 @@ namespace sde::simd {
         static constexpr size_t size = SDE_FLOAT_WIDTH;
         static constexpr size_t width = SDE_FLOAT_WIDTH;
 
+        simd() = default;
+
 
         explicit SIMD_INLINE simd(float x);
 
@@ -122,6 +124,8 @@ namespace sde::simd {
         double_lane v;
         static constexpr size_t size = SDE_DOUBLE_WIDTH;
         static constexpr size_t width = SDE_DOUBLE_WIDTH;
+
+        simd() = default;
 
         explicit SIMD_INLINE simd(double x);
 #if SDE_DOUBLE_WIDTH > 1
