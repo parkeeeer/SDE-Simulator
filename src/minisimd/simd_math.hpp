@@ -248,6 +248,26 @@ namespace sde::simd {
         int64x2_t unbiased = vsubq_s64(signed_exp, vdupq_n_s64(1023));
         return simd<double>{vcvtq_f64_s64(unbiased)};
     }
+
+    template<>
+    inline simd<float> floor(const simd<float>& x) {
+        return simd<float>{vrndmq_f32(x.v)};
+    }
+
+    template<>
+    inline simd<double> floor(const simd<double>& x) {
+        return simd<double>{vrndmq_f64(x.v)};
+    }
+
+    template<>
+    inline simd<float> ceil(const simd<float>& x) {
+        return simd<float>{vrndpq_f32(x.v)};
+    }
+
+    template<>
+    inline simd<double> ceil(const simd<double>& x) {
+        return simd<double>{vrndpq_f64(x.v)};
+    }
 #else
     inline simd<float> fma(const simd<float>& a, const simd<float>& b, const simd<float>& c) {
         return std::fmaf(a,b,c);
@@ -348,17 +368,19 @@ namespace sde::simd {
         simd<float> signs = x & simd<float>(-0.0f);
         auto [xr, n] = detail::cody_waite(abs_x);
 
-        auto tmp = select(n >= simd<float>(2.0f), simd<float>(1.0f), simd<float>(0.0f));
+        simd<float> nmod4 = n - simd<float>(4.0f) * floor(n * simd<float>(.25f));
 
-        auto swap_bit = n - simd<float>(2.0f) * tmp;
+        auto use_cos = ((nmod4 >= simd<float>(1.0f)) && (nmod4 < simd<float>(2.0f))) ||
+               (nmod4 >= simd<float>(3.0f));
 
-        auto flip_sign = tmp != simd<float>(0.0f);
+        auto flip_sign = nmod4 >= simd<float>(2.0f);
+
         simd<float> result_sign = signs ^ select(flip_sign, simd<float>(-0.0f), simd<float>(0.0f));
 
         simd<float> sin_result = detail::sin_eval(xr);
         simd<float> cos_result = detail::cos_eval(xr);
 
-        simd<float> result = select(swap_bit == simd<float>(0.0f), sin_result, cos_result);
+        simd<float> result = select(use_cos, cos_result, sin_result);
         return result ^ result_sign;
     }
 
@@ -368,16 +390,20 @@ namespace sde::simd {
         //cos is even so no sign logic yay!!
         auto [xr, n] = detail::cody_waite(abs_x);
 
-        auto tmp = select(n >= simd<float>(2.0f), simd<float>(1.0f), simd<float>(0.0f));
-        auto swap_bit = n - simd<float>(2.0f) * tmp;
+        n = n + simd<float>(1.f);
 
-        auto flip_sign = tmp != simd<float>(0.0f);
+        simd<float> nmod4 = n - simd<float>(4.0f) * floor(n * simd<float>(.25f));
+
+        auto use_cos = ((nmod4 >= simd<float>(1.0f)) && (nmod4 < simd<float>(2.0f))) ||
+               (nmod4 >= simd<float>(3.0f));
+
+        auto flip_sign = nmod4 >= simd<float>(2.0f);
         simd<float> result_sign = select(flip_sign, simd<float>(-0.0f), simd<float>(0.0f));
 
         simd<float> sin_result = detail::sin_eval(xr);
         simd<float> cos_result = detail::cos_eval(xr);
 
-        simd<float> result = select(swap_bit == simd<float>(0.0f), cos_result, sin_result);
+        simd<float> result = select(use_cos, cos_result, sin_result);
         return result ^ result_sign;
     }
 
@@ -387,17 +413,19 @@ namespace sde::simd {
         simd<double> signs = x & simd<double>(-0.0);
         auto [xr, n] = detail::cody_waite(abs_x);
 
-        auto tmp = select(n >= simd<double>(2.0), simd<double>(1.0), simd<double>(0.0));
+        simd<double> nmod4 = n - simd<double>(4.0) * floor(n * simd<double>(.25));
 
-        auto swap_bit = n - simd<double>(2.0f) * tmp;
+        auto use_cos = ((nmod4 >= simd<double>(1.0)) && (nmod4 < simd<double>(2.0))) ||
+               (nmod4 >= simd<double>(3.0));
 
-        auto flip_sign = tmp != simd<double>(0.0);
+        auto flip_sign = nmod4 >= simd<double>(2.0);
+
         simd<double> result_sign = signs ^ select(flip_sign, simd<double>(-0.0), simd<double>(0.0));
 
         simd<double> sin_result = detail::sin_eval(xr);
         simd<double> cos_result = detail::cos_eval(xr);
 
-        simd<double> result = select(swap_bit == simd<double>(0.0), sin_result, cos_result);
+        simd<double> result = select(use_cos,cos_result,sin_result);
         return result ^ result_sign;
     }
 
@@ -407,63 +435,48 @@ namespace sde::simd {
         //cos is even so no sign logic yay!!
         auto [xr, n] = detail::cody_waite(abs_x);
 
-        auto tmp = select(n >= simd<double>(2.0), simd<double>(1.0), simd<double>(0.0));
-        auto swap_bit = n - simd<double>(2.0) * tmp;
+        n = n + simd<double>(1.0);
+        simd<double> nmod4 = n - simd<double>(4.0) * floor(n * simd<double>(.25));
 
-        auto flip_sign = tmp != simd<double>(0.0);
+        auto use_cos = ((nmod4 >= simd<double>(1.0)) && (nmod4 < simd<double>(2.0))) ||
+               (nmod4 >= simd<double>(3.0));
+
+        auto flip_sign = nmod4 >= simd<double>(2.0);
         simd<double> result_sign = select(flip_sign, simd<double>(-0.0), simd<double>(0.0));
 
         simd<double> sin_result = detail::sin_eval(xr);
         simd<double> cos_result = detail::cos_eval(xr);
 
-        simd<double> result = select(swap_bit == simd<double>(0.0), cos_result, sin_result);
+        simd<double> result = select(use_cos, cos_result, sin_result);
         return result ^ result_sign;
     }
 
     template<>
     inline simd<float> tan(const simd<float>& x) {
         simd<float> abs_x = abs(x);
-        simd<float> signs = x & simd<float>(-0.0f);
         auto [xr, n] = detail::cody_waite(abs_x);
 
         simd<float> sin_result = detail::sin_eval(xr);
         simd<float> cos_result = detail::cos_eval(xr);
 
-        auto tmp = select(n >= simd<float>(2.0f), simd<float>(1.0f), simd<float>(0.0f));
-        auto swap_bit = n - simd<float>(2.0f) * tmp;
+        simd<float> nmod2 = n - simd<float>(2.0f) * floor(n * simd<float>(0.5f));
 
-        auto flip_sign = tmp != simd<float>(0.0f);
-        simd<float> sin_sign = signs ^ select(flip_sign, simd<float>(-0.0f), simd<float>(0.0f));
-        simd<float> sin_val = select(swap_bit == simd<float>(0.0f), sin_result, cos_result);
-        sin_val = sin_val ^ sin_sign;
-
-        simd<float> cos_val = select(swap_bit == simd<float>(0.0f), cos_result, sin_result);
-        cos_val = cos_val ^ select(flip_sign, simd<float>(-0.0f), simd<float>(0.0f));
-
-        return sin_val / cos_val;
+        auto use_cot = nmod2 >= simd<float>(1.0f);
+        return select(use_cot, -cos_result / sin_result, sin_result / cos_result);
     }
 
     template<>
     inline simd<double> tan(const simd<double>& x) {
         simd<double> abs_x = abs(x);
-        simd<double> signs = x & simd<double>(-0.0);
         auto [xr, n] = detail::cody_waite(abs_x);
 
         simd<double> sin_result = detail::sin_eval(xr);
         simd<double> cos_result = detail::cos_eval(xr);
 
-        auto tmp = select(n >= simd<double>(2.0), simd<double>(1.0), simd<double>(0.0));
-        auto swap_bit = n - simd<double>(2.0) * tmp;
+        simd<double> nmod2 = n - simd<double>(2.0) * floor(n * simd<double>(0.5));
 
-        auto flip_sign = tmp != simd<double>(0.0);
-        simd<double> sin_sign = signs ^ select(flip_sign, simd<double>(-0.0), simd<double>(0.0));
-        simd<double> sin_val = select(swap_bit == simd<double>(0.0), sin_result, cos_result);
-        sin_val = sin_val ^ sin_sign;
-
-        simd<double> cos_val = select(swap_bit == simd<double>(0.0), cos_result, sin_result);
-        cos_val = cos_val ^ select(flip_sign, simd<double>(-0.0), simd<double>(0.0));
-
-        return sin_val / cos_val;
+        auto use_cot = nmod2 >= simd<double>(1.0f);
+        return select(use_cot, -cos_result / sin_result, sin_result / cos_result);
     }
 
     template<>
@@ -479,17 +492,23 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<double> detail::exp_eval(const simd<double>& x) {
-        simd<double> p(0x1.71ddf82db5bb4p-19);
-        p = fma(p, x, simd<double>(0x1.27e4fb7789f5cp-14));
-        p = fma(p, x, simd<double>(0x1.1ee9ebdb4b1c4p-10));
-        p = fma(p, x, simd<double>(0x1.5d87fe78a6731p-07));
-        p = fma(p, x, simd<double>(0x1.6c16c16bebd93p-05));
-        p = fma(p, x, simd<double>(0x1.1111111110f8ap-03));  // ≈ 1/720
-        p = fma(p, x, simd<double>(0x1.55555555554c3p-02));  // ≈ 1/6
-        p = fma(p, x, simd<double>(0x1.0000000000000p-01));  // 1/2
-        p = fma(p, x, simd<double>(1.0));
-        p = fma(p, x, simd<double>(1.0));
+    inline simd<double> detail::exp_eval(const simd<double>& r) {
+        // Minimax polynomial for exp(r) on [-0.35, 0.35]
+        // Degree 10 from Sollya
+
+        simd<double> p(2.5022322536e-8);
+        p = fma(p, r, simd<double>(2.7629817929e-7));
+        p = fma(p, r, simd<double>(2.7557508395e-6));
+        p = fma(p, r, simd<double>(2.4801566879e-5));
+        p = fma(p, r, simd<double>(1.9841269707e-4));
+        p = fma(p, r, simd<double>(1.3888888934e-3));
+        p = fma(p, r, simd<double>(8.3333333326e-3));
+        p = fma(p, r, simd<double>(4.1666666666e-2));
+        p = fma(p, r, simd<double>(0.166666666666));
+        p = fma(p, r, simd<double>(0.5));
+        p = fma(p, r, simd<double>(1.0));
+        p = fma(p, r, simd<double>(1.0));
+
         return p;
     }
 
@@ -532,33 +551,41 @@ namespace sde::simd {
 
     template<>
     inline simd<float> detail::log_eval(const simd<float>& x) {
-        simd<float> p(0x1.0p-7f);
-        p = fma(p, x, simd<float>(-0x1.0p-6f));
-        p = fma(p, x, simd<float>(0x1.249250p-5f));
-        p = fma(p, x, simd<float>(-0x1.555556p-5f));
-        p = fma(p, x, simd<float>(0x1.999a0cp-4f));
-        p = fma(p, x, simd<float>(-0x1.555556p-3f));
-        p = fma(p, x, simd<float>(0x1.000000p-1f));
-        p = p * x;
-        p = fma(p, x, x);
+        // minimax polynomial for log(x) on [0.5, 0.999999]
+        // generated by sollya
+
+        simd<float> p(0.9729421138763427734375f);
+        p = fma(p, x, simd<float>(-6.2009067535400390625f));
+        p = fma(p, x, simd<float>(17.2790775299072265625f));
+        p = fma(p, x, simd<float>(-27.62737274169921875f));
+        p = fma(p, x, simd<float>(28.022068023681640625f));
+        p = fma(p, x, simd<float>(-19.0107860565185546875f));
+        p = fma(p, x, simd<float>(9.46431732177734375f));
+        p = fma(p, x, simd<float>(-2.8993394374847412109375f));
+
         return p;
     }
 
     template<>
     inline simd<double> detail::log_eval(const simd<double>& x) {
-        simd<double> p(0x1.c6a8093ac4f32p-8);
-        p = fma(p, x, simd<double>(-0x1.bcb7b15200000p-7));
-        p = fma(p, x, simd<double>(0x1.287a7636f4361p-6));
-        p = fma(p, x, simd<double>(-0x1.bcb7b1526e50ep-6));
-        p = fma(p, x, simd<double>(0x1.2492494229359p-5));
-        p = fma(p, x, simd<double>(-0x1.7ffffffe6b25fp-5));
-        p = fma(p, x, simd<double>(0x1.99999999992a4p-4));
-        p = fma(p, x, simd<double>(-0x1.5555555555555p-3));
-        p = fma(p, x, simd<double>(0x1.0000000000000p-1));
-        p = p * x;
-        p = fma(p, x, x);
+        // minimax polynomial for log(x) on [0.5, 0.999999] (base e)
+        // generated by Sollya
+
+        simd<double> p(-1.78002887866593395571612745698075741529464721679687);
+        p = fma(p, x, simd<double>(15.237232714767539931699502631090581417083740234375));
+        p = fma(p, x, simd<double>(-59.090975553227366390274255536496639251708984375));
+        p = fma(p, x, simd<double>(137.151702012140276565332897007465362548828125));
+        p = fma(p, x, simd<double>(-211.9912953584026809039642103016376495361328125));
+        p = fma(p, x, simd<double>(229.705543798703303082220372743904590606689453125));
+        p = fma(p, x, simd<double>(-178.9370318707593696672120131552219390869140625));
+        p = fma(p, x, simd<double>(101.312817366204711788668646477162837982177734375));
+        p = fma(p, x, simd<double>(-42.07977489397803338988524046726524829864501953125));
+        p = fma(p, x, simd<double>(13.72036301968777394222342991270124912261962890625));
+        p = fma(p, x, simd<double>(-3.24855235647029783052630591555498540401458740234375));
+
         return p;
     }
+
 
     template<>
     inline simd<float> log(const simd<float>& x) {
@@ -569,8 +596,11 @@ namespace sde::simd {
         simd<float> exp = detail::get_exponent(clamped);
         simd<float> mant = detail::get_mantissa(clamped);
 
-        simd<float> r = mant - simd<float>(1.0f);
-        simd<float> log_m = detail::log_eval(r);
+        simd<float> manto2 = mant * simd<float>(.5f);
+        exp += simd<float>(1.0f);
+
+
+        simd<float> log_m = detail::log_eval(manto2);
 
         return fma(exp, ln2, log_m);
     }
@@ -579,13 +609,17 @@ namespace sde::simd {
     inline simd<double> log(const simd<double>& x) {
         const simd<double> ln2(0x1.62e42fefa39efp-1);
 
+
         simd<double> clamped = max(x, simd<double>(0.0000000000001));
 
         simd<double> exp = detail::get_exponent(clamped);
         simd<double> mant = detail::get_mantissa(clamped);
 
-        simd<double> r = mant - simd<double>(1.0);
-        simd<double> log_m = detail::log_eval(r);
+        simd<double> manto2 = mant * simd<double>(.5);
+        exp += simd<double>(1.0);
+
+
+        simd<double> log_m = detail::log_eval(manto2);
 
         return fma(exp, ln2, log_m);
     }
