@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 namespace sde::simd {
     inline simd<float>::simd(float x) {
         v = vdupq_n_f32(x);

@@ -85,5 +85,5 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
 
 template class sde::frontend::Compiler<float>;
 template class sde::frontend::Compiler<double>;
-template class sde::frontend::Compiler<stdx::native_simd<float>>;
-template class sde::frontend::Compiler<stdx::native_simd<double>>;
+template class sde::frontend::Compiler<sde::simd::floatv>;
+template class sde::frontend::Compiler<sde::simd::doublev>;

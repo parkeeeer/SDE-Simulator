@@ -1,7 +1,7 @@
 #include "AST.hpp"
 #include "math.hpp"
 
-#include <experimental/bits/simd.h>
+
 
 using namespace sde::frontend;
 
@@ -182,15 +182,15 @@ namespace sde::frontend {
     //template class ParamNode<float>;
     template class VarNode<float>;
 
-    template class BinOpNode<std::experimental::native_simd<float>>;
-    template class UnarOpNode<std::experimental::native_simd<float>>;
-    template class FuncNode<std::experimental::native_simd<float>>;
-    template class NumNode<std::experimental::native_simd<float>>;
-    template class VarNode<std::experimental::native_simd<float>>;
+    template class BinOpNode<sde::simd::floatv>;
+    template class UnarOpNode<sde::simd::floatv>;
+    template class FuncNode<sde::simd::floatv>;
+    template class NumNode<sde::simd::floatv>;
+    template class VarNode<sde::simd::floatv>;
 
-    template class BinOpNode<std::experimental::native_simd<double>>;
-    template class UnarOpNode<std::experimental::native_simd<double>>;
-    template class FuncNode<std::experimental::native_simd<double>>;
-    template class NumNode<std::experimental::native_simd<double>>;
-    template class VarNode<std::experimental::native_simd<double>>;
+    template class BinOpNode<sde::simd::doublev>;
+    template class UnarOpNode<sde::simd::doublev>;
+    template class FuncNode<sde::simd::doublev>;
+    template class NumNode<sde::simd::doublev>;
+    template class VarNode<sde::simd::doublev>;
 }

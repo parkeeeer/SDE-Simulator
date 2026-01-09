@@ -1,6 +1,6 @@
 #pragma once
 
-#include <concepts.hpp>
+#include <cstddef>
 
 #ifdef _MSC_VER
 #define SIMD_INLINE __forceinline
@@ -30,6 +30,7 @@
 #endif
 
 #if SDE_HAS_AVX512
+#include <immintrin.h>
 using float_lane = __m512;
 using double_lane = __m512d;
 using float_mask = __mmask16;
@@ -37,6 +38,7 @@ using double_mask = __mmask8;
 #define SDE_FLOAT_WIDTH 16
 #define SDE_DOUBLE_WIDTH 8
 #elif SDE_HAS_AVX
+#include <immintrin.h>
 using float_lane = __m256;
 using double_lane = __m256d;
 using float_mask = __m256;
@@ -44,6 +46,7 @@ using double_mask = __m256d;
 #define SDE_FLOAT_WIDTH 8
 #define SDE_DOUBLE_WIDTH 4
 #elif SDE_HAS_NEON
+#include <arm_neon.h>
 using float_lane = float32x4_t;
 using double_lane = float64x2_t;
 using float_mask = uint32x4_t;
@@ -60,15 +63,12 @@ using double_mask = bool;
 #define SDE_DOUBLE_WIDTH 1
 #endif
 
-#if SDE_HAS_NEON
-#include <arm_neon.h>
-#elif SDE_HAS_AVX || SDE_HAS_AVX512
-#include <immintrin.h>
-#endif
-
 namespace sde::simd {
 
-    template<concepts::FloatingPoint Num>
+    template<class T>
+    concept simd_fp = std::is_same_v<T, float> || std::is_same_v<T, double>;
+
+    template<simd_fp Num>
     struct simd_mask;
 
     template<>
@@ -84,7 +84,7 @@ namespace sde::simd {
         simd_mask() = default;
         simd_mask(double_mask v) : v(v) {}
     };
-    template<sde::concepts::FloatingPoint Num>
+    template<simd_fp Num>
     struct simd;
 
     template<>
@@ -92,8 +92,13 @@ namespace sde::simd {
         float_lane v;
         static constexpr size_t size = SDE_FLOAT_WIDTH;
         static constexpr size_t width = SDE_FLOAT_WIDTH;
+        using value_type = float;
 
-        simd() = default;
+        constexpr SIMD_INLINE simd() = default;
+
+        template<class U>
+        requires std::is_arithmetic_v<U> && (!std::is_same_v<U, bool>)
+        constexpr SIMD_INLINE simd(U value) : simd(static_cast<float>(value)) {}
 
 
         explicit SIMD_INLINE simd(float x);
@@ -124,8 +129,13 @@ namespace sde::simd {
         double_lane v;
         static constexpr size_t size = SDE_DOUBLE_WIDTH;
         static constexpr size_t width = SDE_DOUBLE_WIDTH;
+        using value_type = double;
 
-        simd() = default;
+        constexpr SIMD_INLINE simd() = default;
+
+        template<class U>
+        requires std::is_arithmetic_v<U> && (!std::is_same_v<U, bool>)
+        constexpr SIMD_INLINE simd(U value) : simd(static_cast<double>(value)) {}
 
         explicit SIMD_INLINE simd(double x);
 #if SDE_DOUBLE_WIDTH > 1

@@ -529,25 +529,25 @@ sde::frontend::AST<Num> sde::frontend::optimize_one_pass(const sde::frontend::AS
 
 template frontend::NodePtr<float> sde::frontend::differentiate(const NodePtr<float>&, std::string_view, bool);
 template frontend::NodePtr<double> sde::frontend::differentiate(const NodePtr<double>&, std::string_view, bool);
-template frontend::NodePtr<stdx::native_simd<float>> sde::frontend::differentiate(const NodePtr<stdx::native_simd<float>>&, std::string_view, bool);
-template frontend::NodePtr<stdx::native_simd<double>> sde::frontend::differentiate(const NodePtr<stdx::native_simd<double>>&, std::string_view, bool);
+template frontend::NodePtr<sde::simd::floatv> sde::frontend::differentiate(const NodePtr<sde::simd::floatv>&, std::string_view, bool);
+template frontend::NodePtr<sde::simd::doublev> sde::frontend::differentiate(const NodePtr<sde::simd::doublev>&, std::string_view, bool);
 
 template frontend::AST<float> sde::frontend::differentiate(const frontend::AST<float>&, std::string_view, bool);
 template frontend::AST<double> sde::frontend::differentiate(const frontend::AST<double>&, std::string_view, bool);
-template frontend::AST<stdx::native_simd<float>> sde::frontend::differentiate(const frontend::AST<stdx::native_simd<float>>&, std::string_view, bool);
-template frontend::AST<stdx::native_simd<double>> sde::frontend::differentiate(const frontend::AST<stdx::native_simd<double>>&, std::string_view, bool);
+template frontend::AST<sde::simd::floatv> sde::frontend::differentiate(const frontend::AST<sde::simd::floatv>&, std::string_view, bool);
+template frontend::AST<sde::simd::doublev> sde::frontend::differentiate(const frontend::AST<sde::simd::doublev>&, std::string_view, bool);
 
 template frontend::AST<float> sde::frontend::optimize(const frontend::AST<float>&);
 template frontend::AST<double> sde::frontend::optimize(const frontend::AST<double>&);
-template frontend::AST<stdx::native_simd<float>> sde::frontend::optimize(const frontend::AST<stdx::native_simd<float>>&);
-template frontend::AST<stdx::native_simd<double>> sde::frontend::optimize(const frontend::AST<stdx::native_simd<double>>&);
+template frontend::AST<sde::simd::floatv> sde::frontend::optimize(const frontend::AST<sde::simd::floatv>&);
+template frontend::AST<sde::simd::doublev> sde::frontend::optimize(const frontend::AST<sde::simd::doublev>&);
 
 template frontend::AST<float> sde::frontend::optimize_one_pass(const frontend::AST<float>&);
 template frontend::AST<double> sde::frontend::optimize_one_pass(const frontend::AST<double>&);
-template frontend::AST<stdx::native_simd<float>> sde::frontend::optimize_one_pass(const frontend::AST<stdx::native_simd<float>>&);
-template frontend::AST<stdx::native_simd<double>> sde::frontend::optimize_one_pass(const frontend::AST<stdx::native_simd<double>>&);
+template frontend::AST<sde::simd::floatv> sde::frontend::optimize_one_pass(const frontend::AST<sde::simd::floatv>&);
+template frontend::AST<sde::simd::doublev> sde::frontend::optimize_one_pass(const frontend::AST<sde::simd::doublev>&);
 
 template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<float>&);
 template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<double>&);
-template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<stdx::native_simd<float>>&);
-template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<stdx::native_simd<double>>&);
+template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<sde::simd::floatv>&);
+template void sde::frontend::ast_to_text(const sde::frontend::NodePtr<sde::simd::doublev>&);

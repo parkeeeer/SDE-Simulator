@@ -164,5 +164,5 @@ NodePtr<Num> Parser<Num>::parse_ident(){
 
 template class sde::frontend::Parser<double>;
 template class sde::frontend::Parser<float>;
-template class sde::frontend::Parser<stdx::native_simd<double>>;
-template class sde::frontend::Parser<stdx::native_simd<float>>;
+template class sde::frontend::Parser<sde::simd::floatv>;
+template class sde::frontend::Parser<sde::simd::doublev>;

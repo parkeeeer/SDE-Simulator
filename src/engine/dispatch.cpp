@@ -87,11 +87,11 @@ template<concepts::FloatingPoint Num>
 array2d<Num> sde::bytecode_dispatch(Config& config) {
     array2d<Num> results;
     if (config.use_simd) {
-        size_t simd_width = stdx::native_simd<Num>::size();
+        size_t simd_width = simd::simd<Num>::size;
         size_t num_paths = config.num_paths;
         size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
         results = array2d<Num>(config.num_steps, padded_paths, Layout::TimeMajor, config.dt, 0, simd_width);
-        typed_bytecode_dispatch<stdx::native_simd<Num>>(config, results, padded_paths);
+        typed_bytecode_dispatch<sde::simd::simd<Num>>(config, results, padded_paths);
     }else {
         results = array2d<Num>(config.num_steps, config.num_paths, Layout::TimeMajor, config.dt, 0, 1);
         typed_bytecode_dispatch<Num>(config, results, config.num_paths);
@@ -103,11 +103,11 @@ template<concepts::FloatingPoint Num>
 array2d<Num> sde::AST_dispatch(Config& config) {
     array2d<Num> results;
     if (config.use_simd) {
-        size_t simd_width = stdx::native_simd<Num>::size();
+        size_t simd_width = simd::simd<Num>::size;
         size_t num_paths = config.num_paths;
         size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
         results = array2d<Num>(config.num_steps, padded_paths, Layout::TimeMajor, config.dt, 0, simd_width);
-        typed_AST_dispatch<stdx::native_simd<Num>>(config, results, padded_paths);
+        typed_AST_dispatch<sde::simd::simd<Num>>(config, results, padded_paths);
     }else {
         results = array2d<Num>(config.num_steps, config.num_paths, Layout::TimeMajor, config.dt, 0, 1);
         typed_AST_dispatch<Num>(config, results, config.num_paths);
