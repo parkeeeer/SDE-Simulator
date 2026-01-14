@@ -364,12 +364,11 @@ frontend::NodePtr<Num> optimize_node(const frontend::NodePtr<Num>& expr, bool& c
 template<concepts::fp_or_simd Num>
 frontend::AST<Num> frontend::optimize(const AST<Num> &expr) {
     bool changed = false;
-    size_t i = 0;
     NodePtr<Num> root = optimize_node(expr.get_root(), changed);
-    do {
+    while (changed) {
         changed = false;
         root = optimize_node(root, changed);
-    }while(changed);
+    }
     return AST<Num>(std::move(root));
 }
 
@@ -497,10 +496,7 @@ sde::frontend::AST<Num> sde::frontend::optimize_one_pass(const sde::frontend::AS
                     break;
                 }
             }
-            for (auto& arg : func->args) {
-                ast_to_text(arg);
-                cout << ", ";
-            }
+            ast_to_text(func->args[0]);
             cout << ")";
         }
         auto num = dynamic_cast<sde::frontend::NumNode<Num>*>(expr.get());
