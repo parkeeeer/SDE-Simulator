@@ -119,10 +119,31 @@ namespace sde::detail{
                 case sde::frontend::FuncIds::TAN: {
                     if constexpr(std::is_same_v<Num, float>) {
                         source += "tanf(";
-                    }else {
+                    } else {
                         source += "tan(";
                     }
                     break;
+                }
+                case sde::frontend::FuncIds::SINH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        source += "sinhf(";
+                    } else {
+                        source += "sinh(";
+                    }
+                }
+                case sde::frontend::FuncIds::COSH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        source += "coshf(";
+                    } else {
+                        source += "cosh(";
+                    }
+                }
+                case sde::frontend::FuncIds::TANH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        source += "tanhf(";
+                    } else {
+                        source += "tanh(";
+                    }
                 }
                 case sde::frontend::FuncIds::ABS: {
                     if constexpr(std::is_same_v<Num, float>) {

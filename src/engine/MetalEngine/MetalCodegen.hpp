@@ -118,6 +118,24 @@ namespace sde::detail {
                     source += ")";
                     break;
                 }
+                case sde::frontend::FuncIds::SINH: {
+                    source += "sinh(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ")";
+                    break;
+                }
+                case sde::frontend::FuncIds::COSH: {
+                    source += "cosh(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ")";
+                    break;
+                }
+                case sde::frontend::FuncIds::TANH: {
+                    source += "tanh(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ")";
+                    break;
+                }
                 case sde::frontend::FuncIds::ABS: {
                     source += "abs(";
                     ast_to_metal<Num>(func->args[0], source);

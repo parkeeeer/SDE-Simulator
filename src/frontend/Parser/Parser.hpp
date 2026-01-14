@@ -80,6 +80,9 @@ class Parser{
         if(name == "abs") return FuncIds::ABS;
         if(name == "max") return FuncIds::MAX;
         if(name == "min") return FuncIds::MIN;
+        if (name == "cosh") return FuncIds::COSH;
+        if (name == "sinh") return FuncIds::SINH;
+        if (name == "tanh") return FuncIds::TANH;
         return std::nullopt;
     }
 
@@ -92,6 +95,9 @@ class Parser{
             case FuncIds::COS:
             case FuncIds::TAN:
             case FuncIds::ABS:
+            case FuncIds::COSH:
+            case FuncIds::SINH:
+            case FuncIds::TANH:
                 return 1;
             case FuncIds::MAX:
             case FuncIds::MIN:

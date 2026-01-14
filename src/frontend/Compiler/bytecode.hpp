@@ -17,7 +17,7 @@ enum class operation{
 
     ADD, SUB, MUL, DIV, POW,
 
-    NEGATE, ABS, SIN, COS, TAN, EXP, LOG, SQRT,
+    NEGATE, ABS, SIN, COS, TAN, SINH, COSH, TANH, EXP, LOG, SQRT,
 
     MAX, MIN, LSE_MAX, LSE_MIN, SOFTMAX,
 
@@ -59,7 +59,7 @@ struct Program{
         static void* labels[] = {
             &&op_PUSH_CONST, &&op_LOAD_X, &&op_LOAD_T,
             &&op_ADD, &&op_SUB, &&op_MUL, &&op_DIV, &&op_POW,
-            &&op_NEGATE, &&op_ABS, &&op_SIN, &&op_COS, &&op_TAN,
+            &&op_NEGATE, &&op_ABS, &&op_SIN, &&op_COS, &&op_TAN, &&op_SINH, &&op_COSH, &&op_TANH,
             &&op_EXP, &&op_LOG, &&op_SQRT,
             &&op_MAX, &&op_MIN, &&op_LSE_MAX, &&op_LSE_MIN, &&op_SOFTMAX,
             &&op_DONE
@@ -150,6 +150,24 @@ struct Program{
         op_TAN:{
             Num a = POP();
             PUSH(math::tan(a));
+            DISPATCH();
+        }
+
+        op_SINH:{
+            Num a = POP();
+            PUSH(math::sinh(a));
+            DISPATCH();
+        }
+
+        op_COSH:{
+            Num a = POP();
+            PUSH(math::cosh(a));
+            DISPATCH();
+        }
+
+        op_TANH:{
+            Num a = POP();
+            PUSH(math::tanh(a));
             DISPATCH();
         }
 
@@ -295,6 +313,24 @@ struct Program{
                     stack.push_back(math::tan(a));
                     break;
                 }
+                case operation::SINH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::sinh(a));
+                    break;
+                }
+                case operation::COSH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::cosh(a));
+                    break;
+                }
+                case operation::TANH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::tanh(a));
+                    break;
+                }
                 case operation::EXP:{
                     Num a = stack.back();
                     stack.pop_back();
@@ -365,7 +401,7 @@ struct Program{
         static void* labels[] = {
             &&op_PUSH_CONST, &&op_LOAD_X, &&op_LOAD_T,
             &&op_ADD, &&op_SUB, &&op_MUL, &&op_DIV, &&op_POW,
-            &&op_NEGATE, &&op_ABS, &&op_SIN, &&op_COS, &&op_TAN,
+            &&op_NEGATE, &&op_ABS, &&op_SIN, &&op_COS, &&op_TAN, &&op_SINH, &&op_COSH, &&op_TANH,
             &&op_EXP, &&op_LOG, &&op_SQRT,
             &&op_MAX, &&op_MIN, &&op_LSE_MAX, &&op_LSE_MIN, &&op_SOFTMAX,
             &&op_DONE
@@ -456,6 +492,24 @@ struct Program{
         op_TAN:{
             Num a = POP();
             PUSH(math::tan(a));
+            DISPATCH();
+        }
+
+        op_SINH:{
+            Num a = POP();
+            PUSH(math::sinh(a));
+            DISPATCH();
+        }
+
+        op_COSH:{
+            Num a = POP();
+            PUSH(math::cosh(a));
+            DISPATCH();
+        }
+
+        op_TANH:{
+            Num a = POP();
+            PUSH(math::tanh(a));
             DISPATCH();
         }
 
@@ -599,6 +653,24 @@ struct Program{
                     Num a = stack.back();
                     stack.pop_back();
                     stack.push_back(math::tan(a));
+                    break;
+                }
+                case operation::SINH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::sinh(a));
+                    break;
+                }
+                case operation::COSH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::cosh(a));
+                    break;
+                }
+                case operation::TANH: {
+                    Num a = stack.back();
+                    stack.pop_back();
+                    stack.push_back(math::tanh(a));
                     break;
                 }
                 case operation::EXP:{

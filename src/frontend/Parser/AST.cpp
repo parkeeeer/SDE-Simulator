@@ -59,6 +59,12 @@ Num FuncNode<Num>::eval(Num X, Num t) const{
             return math::cos(args[0]->eval(X, t));
         case FuncIds::TAN:
             return math::tan(args[0]->eval(X, t));
+        case FuncIds::COSH:
+            return math::cosh(args[0]->eval(X, t));
+        case FuncIds::SINH:
+            return math::sinh(args[0]->eval(X, t));
+        case FuncIds::TANH:
+            return math::tanh(args[0]->eval(X, t));
         case FuncIds::ABS:
             return math::abs(args[0]->eval(X, t));
         case FuncIds::MAX:
@@ -142,6 +148,12 @@ Num FuncNode<Num>::safe_eval(Num X, Num t) const {
             return math::cos(args[0]->safe_eval(X, t));
         case FuncIds::TAN:
             return math::tan(args[0]->safe_eval(X, t));
+        case FuncIds::SINH:
+            return math::sinh(args[0]->safe_eval(X, t));
+        case FuncIds::COSH:
+            return math::cosh(args[0]->safe_eval(X, t));
+        case FuncIds::TANH:
+            return math::tanh(args[0]->safe_eval(X, t));
         case FuncIds::ABS:
             return math::abs(args[0]->safe_eval(X,t));
         case FuncIds::MAX:

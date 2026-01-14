@@ -120,6 +120,12 @@ frontend::NodePtr<Num> frontend::differentiate(const NodePtr<Num>& expr, const s
                 return make_unique<UnarOpNode<Num>>(make_unique<BinOpNode<Num>>(differentiate(func->args[0], var), make_unique<FuncNode<Num>>(FuncIds::SIN, make_single_arg(clone(func->args[0]))), BinOps::MULTIPLY), UnarOps::NEGATE);
             case FuncIds::TAN:
                 return make_unique<BinOpNode<Num>>(differentiate(func->args[0], var), make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::COS, make_single_arg(clone(func->args[0]))), make_unique<FuncNode<Num>>(FuncIds::COS, make_single_arg(clone(func->args[0]))), BinOps::MULTIPLY), BinOps::DIVIDE);
+            case FuncIds::SINH:
+                return make_unique<BinOpNode<Num>>(differentiate(func->args[0], var), make_unique<FuncNode<Num>>(FuncIds::COSH, make_single_arg(clone(func->args[0]))), BinOps::MULTIPLY);
+            case FuncIds::COSH:
+                return make_unique<BinOpNode<Num>>(differentiate(func->args[0], var), make_unique<FuncNode<Num>>(FuncIds::SINH, make_single_arg(clone(func->args[0]))), BinOps::MULTIPLY);
+            case FuncIds::TANH:
+                return make_unique<BinOpNode<Num>>(differentiate(func->args[0], var), make_unique<BinOpNode<Num>>(make_unique<NumNode<Num>>(math::simd_cast<Num>(1.0)), make_unique<BinOpNode<Num>>(clone(expr),clone(expr), BinOps::MULTIPLY), BinOps::SUBTRACT), BinOps::MULTIPLY);
             case FuncIds::ABS:
                 if (pedantic) throw std::runtime_error("abs function is not differentiable everywhere");
                 return make_unique<BinOpNode<Num>>(

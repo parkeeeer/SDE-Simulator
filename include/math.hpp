@@ -83,6 +83,27 @@ namespace sde::math {
     }
 
     template<concepts::fp_or_simd Num>
+    Num sinh(Num x) {
+        using std::sinh;
+        using simd::sinh;
+        return sinh(x);
+    }
+
+    template<concepts::fp_or_simd Num>
+    Num cosh(Num x) {
+        using std::cosh;
+        using simd::cosh;
+        return cosh(x);
+    }
+
+    template<concepts::fp_or_simd Num>
+    Num tanh(Num x) {
+        using std::tanh;
+        using simd::tanh;
+        return tanh(x);
+    }
+
+    template<concepts::fp_or_simd Num>
     Num exp(Num x) {
         using std::exp;
         using simd::exp;
