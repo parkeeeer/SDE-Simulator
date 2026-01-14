@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
-#set
+
+
 
 add_executable(SDE-Simulator-main main.cpp)
 target_compile_options(SDE-Simulator-main PRIVATE -Wall -Wextra -Wpedantic)
@@ -24,6 +24,14 @@ if(CUDAToolkit_FOUND)
   set(USE_CUDA ON)
 else()
   set(USE_CUDA OFF)
+endif()
+
+if(APPLE)
+  set(USE_METAL ON)
+  find_library(METAL_LIBRARY Metal)
+  find_library(FOUNDATION_LIBRARY Foundation)
+else()
+  set(USE_METAL OFF)
 endif()
 
 

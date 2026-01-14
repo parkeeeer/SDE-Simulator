@@ -4,11 +4,16 @@
 
 #include "frontend.hpp"
 #include "ast-analysis.hpp"
+#include "CUDAEngine/CudaCodegen.hpp"
 
 #if HAS_CUDA
 #include <CUDAEngine/GPUengine.hpp>
 #include "CUDAEngine/CudaCodegen.hpp"
 #include <cuda_runtime.h>
+#endif
+#if HAS_METAL
+#include "MetalEngine/MetalCodegen.hpp"
+#include "MetalEngine/MetalEngine.hpp"
 #endif
 using namespace sde;
 
@@ -139,6 +144,22 @@ array2d<Num> sde::GPU_dispatch(Config& config) {
     cudaFree(d_paths);
     return results;
 }
+#elif HAS_METAL
+template<concepts::FloatingPoint Num>
+array2d<Num> sde::GPU_dispatch(Config& config) {
+    array2d<Num> results(config.num_steps, config.num_paths, Layout::TimeMajor, config.dt, 0, 1);
+    frontend::AST<Num> diff = frontend::parse<Num>(config.diffusion, config.env);
+    frontend::AST<Num> drift = frontend::parse<Num>(config.drift, config.env);
+    engine::GPU::MetalBuilder<Num> builder(drift, diff);
+    if (config.method == Method::EULER) {
+        builder.append_euler();
+    }else if (config.method == Method::MILSTEIN) {
+        builder.append_milstein();
+    }
+    engine::GPU::MetalProgram<Num> program(builder.get_source());
+    program.launch(results.data(), config.seed, config.dt, 0, config.initial_value, config.num_paths, config.num_steps);
+    return results;
+}
 #else
 template<concepts::FloatingPoint Num>
 array2d<Num> sde::GPU_dispatch(Config& config) {
@@ -158,10 +179,9 @@ sde::AST_dispatch<double>(sde::Config&);
 template array2d<float>
 sde::AST_dispatch<float>(sde::Config&);
 
-#if HAS_CUDA
+
 template array2d<double>
 sde::GPU_dispatch<double>(sde::Config&);
 
 template array2d<float>
 sde::GPU_dispatch<float>(sde::Config&);
-#endif
