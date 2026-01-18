@@ -104,20 +104,103 @@ namespace sde::simd::detail {
 
 namespace sde::simd {
 #if SDE_HAS_AVX512
+    template<>
     inline simd<float> fma(simd<float> a, simd<float> b, simd<float> c) {
         return simd<float>(_mm512_fmadd_ps(a.v, b.v, c.v));
     }
 
+    template<>
     inline simd<double> fma(simd<double> a, simd<double> b, simd<double> c) {
         return simd<double>(_mm512_fmadd_pd(a.v, b.v, c.v));
     }
-#elif SDE_HAS_AVX2
+#elif SDE_HAS_AVX
+    template<>
     inline simd<float> fma(simd<float> a, simd<float> b, simd<float> c) {
         return simd<float>(_m256_fmadd_ps(a.v,b.v,c.v));
     }
 
+    template<>
     inline simd<double> fma(simd<double> a, simd<double> b, simd<double> c) {
         return simd<double>(_m256_fmadd_pd(a.v,b.v,c.v));
+    }
+
+    template<>
+    inline simd<float> sde::simd::sqrt(simd<float> x) {
+        return simd<float>(_mm256_sqrt_ps(x.v));
+    }
+
+    template<>
+    inline simd<double> sde::simd::sqrt(simd<double> x) {
+        return simd<double>(_mm256_sqrt_pd(x.v));
+    }
+
+    template<>
+    inline simd<float> sde::simd::round(simd<float> x) {
+        return simd<float>{_mm256_round_ps(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)};
+    }
+
+    template<>
+    inline simd<double> sde::simd::round(simd<double> x) {
+        return simd<double>{_mm256_round_pd(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)}
+    }
+
+    template<>
+    inline simd<float> sde::simd::abs(simd<float> x) {
+        __m256 sign_mask = _mm256_set1_ps(-1.0f);
+        return simd<float>{_mm256_andnot_ps(sign_mask, x.v)};
+    }
+
+    template<>
+    inline simd<double> sde::simd::abs(simd<double> x) {
+        __m256d sign_mask = _mm256_set1_pd(-1.0);
+        return simd<double>{_mm256_andnot_pd(sign_mask, x.v)};
+    }
+
+    template<>
+    inline simd<float> sde::simd::max(simd<float> a, simd<float> b) {
+        return simd<float>(_mm256_max_ps(a.v, b.v));
+    }
+
+    template<>
+    inline simd<double> sde::simd::max(simd<double> a, simd<double> b) {
+        return simd<double>(_mm256_max_pd(a.v, b.v));
+    }
+
+    template<>
+    inline simd<float> sde::simd::min(simd<float> a, simd<float> b) {
+        return simd<float>(_mm256_min_ps(a.v, b.v));
+    }
+
+    template<>
+    inline simd<double> sde::simd::max(simd<double> a, simd<double> b) {
+        return simd<double>(_mm256_max_pd(a.v, b.v));
+    }
+
+    template<>
+    inline simd<float> sde::simd::detail::pow2(simd<float> x) {
+        __m256i x_int = _mm256_cvtps_epi32(x.v);
+        __m256i bias = _mm256_add_epi32(x_to_int, _mm256_set1_epi32(127));
+        __m256 exponent = _mm256_slli_epi32(bias, 23);
+
+        return simd<float>{_mm256_castsi256_ps(exponent)};
+    }
+
+    template<>
+    inline simd<double> sde::simd::detail::pow2(simf<double> x) {
+        __m128d lo_pd = _mm256_castpd256_pd128(x.v);
+        __m128d hi_pd = _mm256_extractf128_pd(x.v, 1)
+
+        __m128i lo_i32 = _mm_cvttpd_epi32(lo_pd);
+        __m128i hi_i32 = _mm_cvttpd_epi32(hi_pd);
+
+        __m128i all_i32 = _mm_unpacklo_epi64(lo_i32, hi_i32);
+
+        __m256i i64 = _mm256_cvtepi32_epi64(all_i32);
+
+        __m256i bias = _mm256_add_epi64(i64, _mm256_set1_epi64x(1023));
+        __m256i exponent = _mm256_slli_epi64(bias, 52);
+
+        return simd<double>{_mm256_castsi256_pd(exponent)};
     }
 #elif SDE_HAS_NEON
     template<>

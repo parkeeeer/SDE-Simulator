@@ -63,6 +63,7 @@ using double_mask = bool;
 #define SDE_DOUBLE_WIDTH 1
 #endif
 
+
 namespace sde::simd {
 
     template<class T>
@@ -110,16 +111,16 @@ namespace sde::simd {
         static SIMD_INLINE simd load(const float* ptr);
         SIMD_INLINE void store(float* ptr) const;
 
-        SIMD_INLINE simd operator+(const simd& other) const;
-        SIMD_INLINE simd operator-(const simd& other) const;
-        SIMD_INLINE simd operator*(const simd& other) const;
-        SIMD_INLINE simd operator/(const simd& other) const;
+        SIMD_INLINE simd operator+(simd other) const;
+        SIMD_INLINE simd operator-(simd other) const;
+        SIMD_INLINE simd operator*(simd other) const;
+        SIMD_INLINE simd operator/(simd other) const;
         SIMD_INLINE simd operator-() const;
 
-        SIMD_INLINE simd& operator+=(const simd& other);
-        SIMD_INLINE simd& operator-=(const simd& other);
-        SIMD_INLINE simd& operator*=(const simd& other);
-        SIMD_INLINE simd& operator/=(const simd& other);
+        SIMD_INLINE simd& operator+=(simd other);
+        SIMD_INLINE simd& operator-=(simd other);
+        SIMD_INLINE simd& operator*=(simd other);
+        SIMD_INLINE simd& operator/=(simd other);
 
         SIMD_INLINE float operator[](size_t i) const;
     };
@@ -145,16 +146,16 @@ namespace sde::simd {
         static SIMD_INLINE simd load(const double* ptr);
         SIMD_INLINE void store(double* ptr) const;
 
-        SIMD_INLINE simd operator+(const simd& other) const;
-        SIMD_INLINE simd operator-(const simd& other) const;
-        SIMD_INLINE simd operator*(const simd& other) const;
-        SIMD_INLINE simd operator/(const simd& other) const;
+        SIMD_INLINE simd operator+(simd other) const;
+        SIMD_INLINE simd operator-(simd other) const;
+        SIMD_INLINE simd operator*(simd other) const;
+        SIMD_INLINE simd operator/(simd other) const;
         SIMD_INLINE simd operator-() const;
 
-        SIMD_INLINE simd& operator+=(const simd& other);
-        SIMD_INLINE simd& operator-=(const simd& other);
-        SIMD_INLINE simd& operator*=(const simd& other);
-        SIMD_INLINE simd& operator/=(const simd& other);
+        SIMD_INLINE simd& operator+=(simd other);
+        SIMD_INLINE simd& operator-=(simd other);
+        SIMD_INLINE simd& operator*=(simd other);
+        SIMD_INLINE simd& operator/=(simd other);
 
         SIMD_INLINE double operator[](size_t i) const;
 
@@ -165,7 +166,7 @@ namespace sde::simd {
 
 #if SDE_HAS_AVX512
 #include "types-AVX512-impl.hpp"
-#elif SDE_HAS_AVX2
+#elif SDE_HAS_AVX
 #include "types-AVX-impl.hpp"
 #elif SDE_HAS_NEON
 #include "types-NEON-impl.hpp"

@@ -1,205 +1,185 @@
 #pragma once
 
-#include<arm_neon.h>
+#include <immintrin.h>
+
+#include "types.hpp"
+
 
 namespace sde::simd {
     template<>
     inline simd_mask<float> sde::simd::operator!(simd_mask<float> x) {
-        return {vmvnq_u32(x.v)};
+        __m256 all_ones = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
+        return simd_mask<float>{_mm256_xor_ps(x.v, all_ones)};
     }
     template<>
     inline simd_mask<float> sde::simd::operator==(simd<float> lhs, simd<float> rhs) {
-        return {vceqq_f32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_EQ_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator!=(simd<float> lhs, simd<float> rhs) {
-        return !(lhs == rhs);
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_NEQ_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator>=(simd<float> lhs, simd<float> rhs) {
-        return {vcgeq_f32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_GE_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator>(simd<float> lhs, simd<float> rhs) {
-        return {vcgtq_f32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_GT_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator<=(simd<float> lhs, simd<float> rhs) {
-        return {vcleq_f32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_LE_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator<(simd<float> lhs, simd<float> rhs) {
-        return {vcltq_f32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_cmp_ps(lhs.v, rhs.v, _CMP_LT_OQ)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator&&(simd_mask<float> lhs, simd_mask<float> rhs) {
-        return {vandq_u32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_and_ps(lhs.v, rhs.v)};
     }
 
     template<>
     inline simd_mask<float> sde::simd::operator||(simd_mask<float> lhs, simd_mask<float> rhs) {
-        return {vorrq_u32(lhs.v, rhs.v)};
+        return simd_mask<float>{_mm256_or_ps(lhs.v, rhs.v)};
     }
 
     template<>
     inline bool sde::simd::all(simd_mask<float> mask) {
-        uint32_t min_v = vminvq_u32(mask.v);
-        return min_v != 0;
+        return _mm256_movemask_ps(mask.v) != 0;
     }
 
     template<>
     inline bool sde::simd::any(simd_mask<float> mask) {
-        uint32_t max_v = vmaxvq_u32(mask.v);
-        return max_v != 0;
+        return _mm256_movemask_ps(mask.v) == 0xFF;
     }
 
     template<>
     inline bool sde::simd::none(simd_mask<float> mask) {
-        return !any(mask);
+        return _mm256_movemask_ps(mask.v) == 0;
     }
 
     template<>
     inline simd<float> sde::simd::select(simd_mask<float> mask, simd<float> true_val, simd<float> false_val) {
-        return simd<float>(vbslq_f32(mask.v, true_val.v, false_val.v));
+        return simd<float>{_mm256_blendv_ps(false_val.v, true_val.v, mask.v)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator!(simd_mask<double> x) {
-        uint64x2_t ones = vdupq_n_u64(0xFFFFFFFFFFFFFFFFULL);
-        return {veorq_u64(x.v, ones)};
+        __m256d all_ones = _mm256_castsi256_pd(_mm256_set1_epi32(-1));
+        return simd_mask<double>{_mm256_xor_pd(x.v, all_ones)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator&&(simd_mask<double> lhs, simd_mask<double> rhs) {
-        return {vandq_u64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_and_pd(lhs.v, rhs.v)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator||(simd_mask<double> lhs, simd_mask<double> rhs) {
-        return {vorrq_u64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_or_pd(lhs.v, rhs.v)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator==(simd<double> lhs, simd<double> rhs) {
-        return {vceqq_f64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_EQ_OQ)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator!=(simd<double> lhs, simd<double> rhs) {
-        return !(lhs == rhs);
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_NEQ_OQ)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator>=(simd<double> lhs, simd<double> rhs) {
-        return {vcgeq_f64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_GE_OQ)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator>(simd<double> lhs, simd<double> rhs) {
-        return {vcgtq_f64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_GT_OQ)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator<=(simd<double> lhs, simd<double> rhs) {
-        return {vcleq_f64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_LE_OQ)};
     }
 
     template<>
     inline simd_mask<double> sde::simd::operator<(simd<double> lhs, simd<double> rhs) {
-        return {vcltq_f64(lhs.v, rhs.v)};
+        return simd_mask<double>{_mm256_cmp_pd(lhs.v, rhs.v, _CMP_LT_OQ)};
     }
 
     template<>
     inline bool sde::simd::all(simd_mask<double> mask) {
-        return vgetq_lane_u64(mask.v, 0) != 0 && vgetq_lane_u64(mask.v, 1) != 0;
+        return _mm256_movemask_pd(mask.v) != 0;
     }
 
     template<>
     inline bool sde::simd::any(simd_mask<double> mask) {
-        return vgetq_lane_u64(mask.v, 0) != 0 || vgetq_lane_u64(mask.v, 1) != 0;
+        return _mm256_movemask_pd(mask.v) == 0xFF;
     }
 
     template<>
     inline bool sde::simd::none(simd_mask<double> mask) {
-        return !any(mask);
+        return _mm256_movemask_pd(mask.v) == 0;
     }
 
     template<>
     inline simd<double> sde::simd::select(simd_mask<double> mask, simd<double> true_val, simd<double> false_val) {
-        return simd<double>(vbslq_f64(mask.v, true_val.v, false_val.v));
+        return simd<double>{_mm256_blendv_pd(false_val.v, true_val.v, mask.v)};
     }
 
 
     template<>
     inline simd<float> sde::simd::operator&(simd<float> a, simd<float> b) {
-        // Reinterpret as integer, AND, reinterpret back
-        uint32x4_t a_int = vreinterpretq_u32_f32(a.v);
-        uint32x4_t b_int = vreinterpretq_u32_f32(b.v);
-        uint32x4_t result = vandq_u32(a_int, b_int);
-        return simd<float>{vreinterpretq_f32_u32(result)};
+        return simd<float>{_mm256_and_ps(a.v, b.v)};
     }
 
     template<>
     inline simd<double> sde::simd::operator&(simd<double> a, simd<double> b) {
-        uint64x2_t a_int = vreinterpretq_u64_f64(a.v);
-        uint64x2_t b_int = vreinterpretq_u64_f64(b.v);
-        uint64x2_t result = vandq_u64(a_int, b_int);
-        return simd<double>{vreinterpretq_f64_u64(result)};
+        return simd<double>{_mm256_and_pd(a.v, b.v)};
     }
 
 
     template<>
     inline simd<float> sde::simd::operator|(simd<float> a, simd<float> b) {
-        uint32x4_t a_int = vreinterpretq_u32_f32(a.v);
-        uint32x4_t b_int = vreinterpretq_u32_f32(b.v);
-        uint32x4_t result = vorrq_u32(a_int, b_int);
-        return simd<float>{vreinterpretq_f32_u32(result)};
+        return simd<float>{_mm256_or_ps(a.v, b.v)};
     }
 
     template<>
     inline simd<double> sde::simd::operator|(simd<double> a, simd<double> b) {
-        uint64x2_t a_int = vreinterpretq_u64_f64(a.v);
-        uint64x2_t b_int = vreinterpretq_u64_f64(b.v);
-        uint64x2_t result = vorrq_u64(a_int, b_int);
-        return simd<double>{vreinterpretq_f64_u64(result)};
+        return simd<double>{_mm256_or_pd(a.v, b.v)};
     }
 
 
     template<>
     inline simd<float> sde::simd::operator^(simd<float> a, simd<float> b) {
-        uint32x4_t a_int = vreinterpretq_u32_f32(a.v);
-        uint32x4_t b_int = vreinterpretq_u32_f32(b.v);
-        uint32x4_t result = veorq_u32(a_int, b_int);
-        return simd<float>{vreinterpretq_f32_u32(result)};
+        return simd<float>{_mm256_xor_ps(a.v, b.v)};
     }
 
     template<>
     inline simd<double> sde::simd::operator^(simd<double> a, simd<double> b) {
-        uint64x2_t a_int = vreinterpretq_u64_f64(a.v);
-        uint64x2_t b_int = vreinterpretq_u64_f64(b.v);
-        uint64x2_t result = veorq_u64(a_int, b_int);
-        return simd<double>(vreinterpretq_f64_u64(result));
+        return simd<double>{_mm256_xor_pd(a.v, b.v)};
     }
 
 
     template<>
     inline simd<float> sde::simd::operator~(simd<float> a) {
-        uint32x4_t a_int = vreinterpretq_u32_f32(a.v);
-        uint32x4_t result = vmvnq_u32(a_int);
-        return simd<float>{vreinterpretq_f32_u32(result)};
+        __m256 all_ones = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
+        return simd<float>(_mm256_xor_ps(a.v, all_ones));
     }
 
     template<>
     inline simd<double> sde::simd::operator~(simd<double> a) {
-        uint64x2_t a_int = vreinterpretq_u64_f64(a.v);
-        uint64x2_t all_ones = vdupq_n_u64(~0ULL);
-        uint64x2_t result = veorq_u64(a_int, all_ones);
-        return simd<double>{vreinterpretq_f64_u64(result)};
+        __m256d all_ones = _mm256_castsi256_pd(_mm256_set1_epi32(-1));
+        return simd<double>(_mm256_xor_pd(a.v, all_ones));
     }
 }

@@ -15,19 +15,19 @@ namespace sde::simd {
         vst1q_f32(ptr, v);
     }
 
-    inline simd<float> simd<float>::operator+(const simd& other) const {
+    inline simd<float> simd<float>::operator+(simd other) const {
         return simd(vaddq_f32(v, other.v));
     }
 
-    inline simd<float> simd<float>::operator-(const simd& other) const {
+    inline simd<float> simd<float>::operator-(simd other) const {
         return simd(vsubq_f32(v, other.v));
     }
 
-    inline simd<float> simd<float>::operator*(const simd& other) const {
+    inline simd<float> simd<float>::operator*(simd other) const {
         return simd(vmulq_f32(v, other.v));
     }
 
-    inline simd<float> simd<float>::operator/(const simd& other) const {
+    inline simd<float> simd<float>::operator/(simd other) const {
         return simd(vdivq_f32(v, other.v));
     }
 
@@ -35,22 +35,22 @@ namespace sde::simd {
         return simd(vnegq_f32(v));
     }
 
-    inline simd<float>& simd<float>::operator+=(const simd& other){
+    inline simd<float>& simd<float>::operator+=(simd other){
         v = vaddq_f32(v, other.v);
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator-=(const simd& other){
+    inline simd<float>& simd<float>::operator-=(simd other){
         v = vsubq_f32(v, other.v);
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator*=(const simd& other) {
+    inline simd<float>& simd<float>::operator*=(simd other) {
         v = vmulq_f32(v, other.v);
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator/=(const simd& other) {
+    inline simd<float>& simd<float>::operator/=(simd other) {
         v = vdivq_f32(v, other.v);
         return *this;
     }
@@ -77,19 +77,19 @@ namespace sde::simd {
         vst1q_f64(ptr, v);
     }
 
-    inline simd<double> simd<double>::operator+(const simd& other) const {
+    inline simd<double> simd<double>::operator+(simd other) const {
         return simd(vaddq_f64(v, other.v));
     }
 
-    inline simd<double> simd<double>::operator-(const simd& other) const {
+    inline simd<double> simd<double>::operator-(simd other) const {
         return simd(vsubq_f64(v, other.v));
     }
 
-    inline simd<double> simd<double>::operator*(const simd& other) const {
+    inline simd<double> simd<double>::operator*(simd other) const {
         return simd(vmulq_f64(v, other.v));
     }
 
-    inline simd<double> simd<double>::operator/(const simd& other) const {
+    inline simd<double> simd<double>::operator/(simd other) const {
         return simd(vdivq_f64(v, other.v));
     }
 
@@ -97,22 +97,22 @@ namespace sde::simd {
         return simd(vnegq_f64(v));
     }
 
-    inline simd<double>& simd<double>::operator+=(const simd& other){
+    inline simd<double>& simd<double>::operator+=(simd other){
         v = vaddq_f64(v, other.v);
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator-=(const simd& other) {
+    inline simd<double>& simd<double>::operator-=(simd other) {
         v = vsubq_f64(v, other.v);
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator*=(const simd& other) {
+    inline simd<double>& simd<double>::operator*=(simd other) {
         v = vmulq_f64(v, other.v);
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator/=(const simd& other) {
+    inline simd<double>& simd<double>::operator/=(simd other) {
         v = vdivq_f64(v, other.v);
         return *this;
     }
