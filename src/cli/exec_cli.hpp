@@ -6,13 +6,16 @@
 #include <string>
 #include <string_view>
 #include <thread>
-#include <frontend.hpp>
+#include "frontend.hpp"
 #include <Variable_Environment.hpp>
-#include "io.hpp"
 #include <concepts.hpp>
 #include <optional>
 #include <iostream>
 #include <fstream>
+#include <random>
+#include "get_value.hpp"
+
+#include "results.h"
 
 
 /*
@@ -22,34 +25,34 @@
  * --num-paths or -np {INTEGER} REQUIRED
  * -method {euler|em|euler-maruyama|milstein} (default euler)
  * -dt {REAL NUMBER} REQUIRED
- * --initial-value or -x0 {REAL NUMBER} REQUIRED
+ * --initial-value or -x0 {REAL NUMBER} (default 0)
  * --num-threads or -nt {INTEGER} (default max)
  * -diff | --diffusion {EXPRESSION} REQUIRED
  * --drift {EXPRESSION} REQUIRED
  * -simd OR -scalar (default simd)
  * --precision {float|double} (default float)
  * --backend or -b {metal|cuda|cpu|gpu|ast|bytecode} (gpu picks based on system, and default is gpu, also cpu = bytecode)
- * --output or -o {FILENAME}
- * --output-stats or -os {FILENAME} (default stdout)
- * --dump-paths or -dp {csv|binary} (default binary)
+ * --output or -o {FILENAME} (default stdout) (if .bin file is used will output in binary, otherwise csv style)
+ * --output-stats or -os {FILENAME} (default stdout) (will also use binary if .bin file)
+ * --dump-paths or -dp (makes --output require a file not stdout) (mutually exclusive with --rand-sample)
  * --percentiles or -p
  * --median or -m
  * --standard-dev or -std
  * --mean or -mean
  * --stats or -s (combines -percentiles, -median, and -std)
- * --rand-sample or -rs {INTEGER}
+ * --rand-sample or -rs {INTEGER} (makes --output a required flag) (mutually exclusive with --dump-paths)
  * --sample-interval or -si {INTEGER} (default 1)
+ * --seed {INTEGER} (default std::random_device)
  * ANYTHING ELSE GETS INTERPERETED AS A PARAMETER!!!!!
  */
 
 
-namespace sde::io {
+namespace sde::cli {
 
     enum class Backend {
         BYTECODE,
         AST,
-        CUDA,
-        METAL
+        GPU
     };
 
     enum class Method {
@@ -75,20 +78,22 @@ namespace sde::io {
         size_t num_steps;
         size_t num_paths;
         double dt;
-        double initial_value;
+
 
         //optional flags(have defaults)
+        double initial_value = 0;
         size_t num_threads = std::thread::hardware_concurrency();
         bool simd = true;
-        Precision precision = Precision::DOUBLE;
-        Backend backend = Backend::BYTECODE; //TODO: switch to GPU whenever that gets implemented
+        Precision precision = Precision::FLOAT;
+        Backend backend = Backend::GPU;
         size_t sample_interval = 1;
         Method method = Method::EULER;
+        size_t seed = std::random_device{}();
 
         //output flags
         std::optional<std::string> output_stats;
         std::optional<std::string> output_file;
-        std::optional<DumpFormat> dump_format;
+        bool dump_paths = false;
         std::optional<size_t> num_rand_samples;
         bool compute_median = false;
         bool compute_std = false;
@@ -104,19 +109,8 @@ namespace sde::io {
         exit(0);
     }
 
-    inline std::string_view get_value(std::string_view input, int& i, int argc, char** argv) {
-        size_t equal_pos = input.find('=');
-        if (equal_pos != std::string::npos) {
-            return input.substr(equal_pos + 1);
-        }
-        if (i + 1 < argc) {
-            return argv[++i];
-        }
-        throw std::runtime_error("Missing value for flag: " + std::string(input));
-    }
-
-    ExecFlags parse_exec(int argc, char** argv);
+    ExecFlags parse_exec(int argc, char** argv, bool expr_defined = false);
 
     template<sde::concepts::FloatingPoint Num>
-    void output_exec(const ExecFlags& flags, const std::vector<Num>& results, std::ostream& out = std::cout);
+    void output_exec(const ExecFlags& flags, array2d<Num>& results);
 }

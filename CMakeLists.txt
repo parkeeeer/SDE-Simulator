@@ -16,6 +16,7 @@ target_compile_options(SDE-Simulator-main PRIVATE -Wall -Wextra -Wpedantic)
 
 
 add_library(SDE-Simulator INTERFACE)
+target_include_directories(SDE-Simulator INTERFACE ${CMAKE_SOURCE_DIR}/include)
 
 
 find_package(CUDAToolkit QUIET)
