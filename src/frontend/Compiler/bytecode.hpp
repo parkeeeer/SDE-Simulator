@@ -11,7 +11,7 @@
 
 namespace sde::frontend {
 
-enum class operation{
+enum class operation: uint32_t {
     PUSH_CONST, LOAD_X, LOAD_T,
 
 
