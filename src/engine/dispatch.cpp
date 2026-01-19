@@ -33,7 +33,8 @@ namespace {
                 engine::CPU::dispatch_simulation<Num, engine::CPU::BytecodeSafeEval<Num>, engine::CPU::euler_functor>(config, results.data(), a_funct, b_funct, b_funct, euler_funct, padded_paths);
             }else if (config.method == Method::MILSTEIN){
                 frontend::AST<Num> b_prime_ast = frontend::differentiate(b_ast, "x");
-                frontend::Program<Num> b_prime_prog = frontend::compile(b_prime_ast);
+                frontend::AST<Num> b_prime_optimized = frontend::optimize(b_prime_ast);
+                frontend::Program<Num> b_prime_prog = frontend::compile(b_prime_optimized);
                 engine::CPU::BytecodeSafeEval<Num> b_prime_funct(b_prime_prog);
                 engine::CPU::milstein_functor milstein_funct;
                 engine::CPU::dispatch_simulation<Num, engine::CPU::BytecodeSafeEval<Num>, engine::CPU::milstein_functor>(config, results.data(), a_funct, b_funct, b_prime_funct, milstein_funct, padded_paths);
@@ -47,7 +48,8 @@ namespace {
                 sde::engine::CPU::dispatch_simulation<Num, engine::CPU::BytecodeEval<Num>, engine::CPU::euler_functor>(config, results.data(), a_funct, b_funct, b_funct, euler_funct, padded_paths);
             }else if (config.method == Method::MILSTEIN) {
                 frontend::AST<Num> b_prime_ast = frontend::differentiate(b_ast, "x");
-                frontend::Program<Num> b_prime_prog = frontend::compile(b_prime_ast);
+                frontend::AST<Num> b_prime_optimized = frontend::optimize(b_prime_ast);
+                frontend::Program<Num> b_prime_prog = frontend::compile(b_prime_optimized);
                 engine::CPU::BytecodeEval<Num> b_prime_funct(b_prime_prog);
                 engine::CPU::milstein_functor milstein_funct;
                 engine::CPU::dispatch_simulation<Num, engine::CPU::BytecodeEval<Num>, engine::CPU::milstein_functor>(config, results.data(), a_funct, b_funct, b_prime_funct, milstein_funct, padded_paths);
@@ -67,7 +69,8 @@ namespace {
                 engine::CPU::dispatch_simulation<Num, engine::CPU::ASTSafeEval<Num>, engine::CPU::euler_functor>(config, results.data(), a_funct, b_funct, b_funct, euler_funct, padded_paths);
             }else if (config.method == Method::MILSTEIN) {
                 frontend::AST<Num> b_prime_ast = frontend::differentiate(b_ast, "x");
-                engine::CPU::ASTSafeEval<Num> b_prime_funct(b_prime_ast);
+                frontend::AST<Num> b_prime_optimized = frontend::optimize(b_prime_ast);
+                engine::CPU::ASTSafeEval<Num> b_prime_funct(b_prime_optimized);
                 engine::CPU::milstein_functor milstein_funct;
                 engine::CPU::dispatch_simulation<Num, engine::CPU::ASTSafeEval<Num>, engine::CPU::milstein_functor>(config, results.data(), a_funct, b_funct, b_prime_funct, milstein_funct, padded_paths);
             }
@@ -80,7 +83,8 @@ namespace {
                 sde::engine::CPU::dispatch_simulation<Num, engine::CPU::ASTEval<Num>, engine::CPU::euler_functor>(config, results.data(), a_funct, b_funct, b_funct, euler_funct, padded_paths);
             }else if (config.method == Method::MILSTEIN) {
                 frontend::AST<Num> b_prime_ast = frontend::differentiate(b_ast, "x");
-                engine::CPU::ASTEval<Num> b_prime_funct(b_prime_ast);
+                frontend::AST<Num> b_prime_optimized = frontend::optimize(b_prime_ast);
+                engine::CPU::ASTEval<Num> b_prime_funct(b_prime_optimized);
                 engine::CPU::milstein_functor milstein_funct;
                 engine::CPU::dispatch_simulation<Num, engine::CPU::ASTEval<Num>, engine::CPU::milstein_functor>(config, results.data(), a_funct, b_funct, b_prime_funct, milstein_funct, padded_paths);
             }
@@ -93,8 +97,7 @@ array2d<Num> sde::bytecode_dispatch(Config& config) {
     array2d<Num> results;
     if (config.use_simd) {
         size_t simd_width = simd::simd<Num>::size;
-        size_t num_paths = config.num_paths;
-        size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
+        size_t padded_paths = ((config.num_paths + simd_width - 1) / simd_width) * simd_width;
         results = array2d<Num>(config.num_steps, padded_paths, Layout::TimeMajor, config.dt, 0, simd_width);
         typed_bytecode_dispatch<sde::simd::simd<Num>>(config, results, padded_paths);
     }else {
@@ -109,8 +112,7 @@ array2d<Num> sde::AST_dispatch(Config& config) {
     array2d<Num> results;
     if (config.use_simd) {
         size_t simd_width = simd::simd<Num>::size;
-        size_t num_paths = config.num_paths;
-        size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
+        size_t padded_paths = ((config.num_paths + simd_width - 1) / simd_width) * simd_width;
         results = array2d<Num>(config.num_steps, padded_paths, Layout::TimeMajor, config.dt, 0, simd_width);
         typed_AST_dispatch<sde::simd::simd<Num>>(config, results, padded_paths);
     }else {

@@ -33,6 +33,13 @@ class Environment{
         add_param("e", M_E);
     }
 
+    Environment(const std::unordered_map<std::string, Num>&& a) {
+        map = a;
+        add_param("pi", M_PI);
+        add_param("tau", M_PI * 2);
+        add_param("e", M_E);
+    }
+
     Num get_param(const std::string& name) const{
         if(is_param(name)){
             return map.at(name);
@@ -40,6 +47,8 @@ class Environment{
             throw std::runtime_error("parameter not found in environment: " + name);
         }
     }
+
+
 
 
     void add_param(const std::string& name, Num value) {

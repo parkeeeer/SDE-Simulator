@@ -12,15 +12,15 @@ add_library(SDE-engine STATIC
 )
 
 if(USE_CUDA)
-    target_compile_definitions(SDE-engine PRIVATE HAS_CUDA=1)
+    target_compile_definitions(SDE-engine PUBLIC HAS_CUDA=1)
 else()
-    target_compile_definitions(SDE-engine PRIVATE HAS_CUDA=0)
+    target_compile_definitions(SDE-engine PUBLIC HAS_CUDA=0)
 endif()
 
 if(USE_METAL)
-    target_compile_definitions(SDE-engine PRIVATE HAS_METAL=1)
+    target_compile_definitions(SDE-engine PUBLIC HAS_METAL=1)
 else()
-    target_compile_definitions(SDE-engine PRIVATE HAS_METAL=0)
+    target_compile_definitions(SDE-engine PUBLIC HAS_METAL=0)
 endif()
 
 
