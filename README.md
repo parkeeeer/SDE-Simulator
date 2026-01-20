@@ -38,7 +38,7 @@ results = sim.simulate(
 plt.plot(results)
 plt.show()
 ```
-
+![100 paths](100_path_gbm.png)
 
 The Python module will be in `build/src/python/`.
 
@@ -53,7 +53,19 @@ After building, the CLI is available at `build/src/cli/SDE-CLI`:
 ./SDE-CLI run gbm --paths 10000 --steps 1000 --dt 0.01 \
     mu=0.05 sigma=0.3 --rand-sample 10 -o results.csv
 ```
-![100 paths](100_path_gbm.png)
+
+
+## Supported Models
+
+Built-in cached models:
+- **gbm**: Geometric Brownian Motion
+- **ou**: Ornstein-Uhlenbeck
+- **cir**: Cox-Ingersoll-Ross
+- **vasicek**: Vasicek interest rate model
+- **cev**: Constant Elasticity of Variance
+
+Or define your own using mathematical expressions!
+
 ## Installation
 
 ```bash
@@ -67,28 +79,19 @@ This will make  both the CLI and Python Bindings.
 
 ### Cmake options
 
-- BUILD_PYTHON_BINDINGS build Python Bindings (default on)
-- BUILD_CLI build the CLI (default on)
-- BUILD_TESTS build the tests (default off)
-- Python_EXECUTABLE specify python version to build for (default auto-detect)
-
-## Supported Models
-
-Built-in cached models:
-- **gbm**: Geometric Brownian Motion
-- **ou**: Ornstein-Uhlenbeck
-- **cir**: Cox-Ingersoll-Ross
-- **vasicek**: Vasicek interest rate model
-- **cev**: Constant Elasticity of Variance
-
-Or define your own using mathematical expressions!
+| Option | Description | Default |
+|--------|-------------|---------|
+| `BUILD_PYTHON_BINDINGS` | Build Python bindings | ON |
+| `BUILD_CLI` | Build command-line interface | ON |
+| `BUILD_TESTS` | Build test suite | OFF |
+| `Python_EXECUTABLE` | Specify Python version | Auto-detect |
 
 
 ## Requirements
 
 - C++20 compiler
 - CMake 3.20+
-- Python 3.12+ (for bindings)
+- Python 3.8+ (for bindings)
 - Metal (macOS) or CUDA (Linux/Windows) for GPU support
 
 ## License
@@ -110,6 +113,6 @@ If you use this in research, please cite:
 ## Architecture
 
 - **Frontend**: Custom lexer → parser → AST → bytecode/CUDA/Metal compiler
-- **Optimization**: SIMD vectorization (ARM NEON, x86 AVX), Multi-threading, minimax polynomial approximations, GPU acceleration, 
+- **Optimization**: SIMD vectorization (ARM NEON, x86 AVX), Multi-threading, minimax polynomial approximations, GPU acceleration 
 - **GPU**: Runtime kernel compilation for Metal/CUDA
 - **Python**: pybind11 with zero-copy NumPy integration
