@@ -21,6 +21,7 @@ namespace sde::frontend{
 
 //Takes an input string and environment to creat a compiled bytecode program
 //bytecode can be run with run_bytecode
+//or use member function .run(X,t)
 //the input should be in the form "drift(x,t) dt + diffusion(x,t) dW (this is required due to how partitioning works.
 template<sde::concepts::fp_or_simd Num>
 std::pair<Program<Num>, Program<Num>> compile_to_bytecode(const std::string& input, const Environment<Num>& env){

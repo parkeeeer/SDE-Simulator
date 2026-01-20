@@ -16,8 +16,11 @@ namespace sde::frontend {
     template<concepts::fp_or_simd Num>
     AST<Num> optimize_one_pass(const AST<Num>& expr);
 
+    /*
+    not implemented nor do i have any plans to
     template<concepts::fp_or_simd Num>
     void check_warning(NodePtr<Num>& expr);
+    */
 
     template<concepts::fp_or_simd Num>
     void ast_to_text(const NodePtr<Num>& expr);

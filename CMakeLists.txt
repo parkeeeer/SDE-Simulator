@@ -7,12 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 
+option(BUILD_PYTHON_BINDINGS "Build Python Bindings" ON)
+option(BUILD_CLI "build command line interface" ON)
+option(BUILD_TESTS "build tests" OFF)
 
+if(BUILD_PYTHON_BINDINGS)
+  find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
 
-
-add_executable(SDE-Simulator-main main.cpp)
-target_compile_options(SDE-Simulator-main PRIVATE -Wall -Wextra -Wpedantic)
-#target_compile_options(SDE-Simulator-main PRIVATE -mavx2)
+  message(STATUS "Building Python bindings for Python ${Python_VERSION}")
+endif()
 
 
 add_library(SDE-Simulator INTERFACE)
@@ -42,13 +45,8 @@ add_subdirectory(src)
 target_link_libraries(SDE-Simulator INTERFACE SDE-Frontend SDE-utils SDE-engine)
 
 
-
-target_link_libraries(SDE-Simulator-main PRIVATE SDE-Simulator)
-
-
-
-include(CTest)
-if(BUILD_TESTING)
+if(BUILD_TESTS)
+  enable_testing()
   include(FetchContent)
 
   FetchContent_Declare(
@@ -57,16 +55,7 @@ if(BUILD_TESTING)
     GIT_TAG v2.4.11
   )
   
-  FetchContent_GetProperties(doctest)
-  if(NOT doctest_POPULATED)
-    FetchContent_Populate(doctest)
-  endif()
-
-  
-  add_library(doctest INTERFACE
-          include/results.h)
-  add_library(doctest::doctest ALIAS doctest)
-  target_include_directories(doctest INTERFACE ${doctest_SOURCE_DIR})
+  FetchContent_MakeAvailable(doctest)
 
   
   list(APPEND CMAKE_MODULE_PATH ${doctest_SOURCE_DIR}/scripts/cmake)
