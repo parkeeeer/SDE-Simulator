@@ -12,13 +12,19 @@
 namespace sde::cli {
     using command = std::variant<sde::cli::ExecFlags, sde::cli::StoreFlags, sde::cli::RunFlags, sde::cli::ViewFlags, sde::cli::ListFlags, sde::cli::RemoveFlags>;
 
-    struct run_tag{};
+    inline void print_help() {
+        std::cout << "list of commands:\nexec\nrun\nstore\nlist\nview\nremove\nuse <command> --help for more info for a specific command";
+    }
 
     inline command parse_cmdline(int argc, char** argv) {
         if (argc < 2) {
             throw std::runtime_error("need a command");
         }
         std::string cmd = argv[1];
+        if (cmd == "--help" || cmd == "h") {
+            print_help();
+            exit(0);
+        }
         if (cmd == "exec" || cmd == "e") {
             return parse_exec(argc, argv);
         }else if (cmd == "store" || cmd == "s") {

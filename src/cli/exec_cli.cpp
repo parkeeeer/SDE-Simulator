@@ -40,7 +40,7 @@ ExecFlags sde::cli::parse_exec(int argc, char** argv, bool expr_defined) {
     for (;i < argc;i++) {
         std::string_view arg = argv[i];
         if (arg == "-h" || arg == "--help") {
-            print_help();
+            print_help_exec();
         }else if (arg.starts_with("--num-steps") || arg.starts_with("-ns")) {
             if (num_steps_defined){throw std::runtime_error("num steps already defined");}
             auto value = get_value(arg, i, argc, argv);

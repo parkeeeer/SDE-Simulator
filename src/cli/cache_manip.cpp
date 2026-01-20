@@ -8,7 +8,7 @@
 using namespace sde::cli;
 
 void print_help_store() {
-    std::cout << "helpful message here" << std::endl;
+    std::cout << "Stores an expression in the cache\n\nUsage:\nsde store [flags]\n\nRequired args:\n--name {STRING}: name of expression in cache\n--diffusion {STRING}: diffusion expression\n--drift {STRING}: drift expression\n\nOptional args:\nnone" << std::endl;
 }
 
 StoreFlags sde::cli::parse_store(int argc, char** argv) {
@@ -47,7 +47,7 @@ StoreFlags sde::cli::parse_store(int argc, char** argv) {
 }
 
 void print_help_view() {
-    std::cout << "helpful message here" << std::endl; //TODO: add helpful message
+    std::cout << "View info about stored expression.\n\nUsage:\nsde view <name>\n\nRequired arguments:\n<name> {STRING}: Name of expression to view info for.\n\nOptional arguments:\nnone" << std::endl;
 }
 
 ViewFlags sde::cli::parse_view(int argc, char** argv) {
@@ -64,13 +64,15 @@ ViewFlags sde::cli::parse_view(int argc, char** argv) {
         if (arg == "--help" || arg == "-h") {
             print_help_view();
             exit(0);
+        } else {
+            throw std::runtime_error("too many arguments");
         }
     }
     return flags;
 }
 
 void print_help_remove() {
-    std::cout << "remove message here" << std::endl; //TODO: add helpful message
+    std::cout << "Removes an expression from the cache\n\nUsage:\nsde remove <name>\n\nRequired args:\n<name> {STRING}: Name of expression to remove\n\nOptional args:\nnone" << std::endl;
 }
 
 RemoveFlags sde::cli::parse_remove(int argc, char** argv) {
@@ -87,6 +89,8 @@ RemoveFlags sde::cli::parse_remove(int argc, char** argv) {
         if (arg == "--help" || arg == "-h") {
             print_help_remove();
             exit(0);
+        }else {
+            throw std::runtime_error("too many arguments");
         }
     }
     return flags;

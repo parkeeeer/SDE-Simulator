@@ -31,7 +31,22 @@ namespace sde::cli {
 
     struct ListFlags {}; //basically a tag lol
 
-    inline ListFlags parse_list(int argc, char** argv) {return ListFlags{};}
+    inline void print_list_help() {
+        std::cout << "Prints a list of names of cached expressions\n\nUsage:\nsde list\n\nNo arguments.";
+    }
+
+    inline ListFlags parse_list(int argc, char** argv) {
+        if (argc > 2) {
+            std::string arg = argv[2];
+            if (arg == "--help" || arg == "-h") {
+                print_list_help();
+                exit (0);
+            }else {
+                throw std::runtime_error("list takes no arguments");
+            }
+        }
+        return ListFlags{};
+    }
 
     inline void output_list(const ListFlags& flags) {
         Cache cache;
