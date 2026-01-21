@@ -14,10 +14,12 @@ namespace sde::engine::GPU {
         bool is_compiled = false;
         void append_device_expression(std::string_view name, const frontend::AST<Num>& ast);
         void append_rng();
+        void append_extra_functions();
     public:
 
         MetalBuilder(frontend::AST<Num>& drift, frontend::AST<Num>& diffusion) : source("#include<metal_stdlib>\nusing namespace metal;\n\n"), drift(&drift), diffusion(&diffusion) {
             append_rng();
+            append_extra_functions();
             append_device_expression("drift", drift);
             append_device_expression("diffusion", diffusion);
         }
@@ -157,6 +159,27 @@ namespace sde::detail {
                     ast_to_metal<Num>(func->args[1], source);
                     source += ")";
                     break;
+                }
+                case sde::frontend::FuncIds::LSE_MAX: {
+                    source += "lse_max(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ",";
+                    ast_to_metal<Num>(func->args[1], source);
+                    source += ")";
+                }
+                case sde::frontend::FuncIds::LSE_MIN: {
+                    source += "lse_min(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ",";
+                    ast_to_metal<Num>(func->args[1], source);
+                    source += ")";
+                }
+                case sde::frontend::FuncIds::SOFTMAX: {
+                    source += "softmax_weight(";
+                    ast_to_metal<Num>(func->args[0], source);
+                    source += ",";
+                    ast_to_metal<Num>(func->args[1], source);
+                    source += ")";
                 }
             }
             source += ")";
@@ -383,6 +406,24 @@ void sde::engine::GPU::MetalBuilder<Num>::append_milstein() {
         "        paths[path_idx + step * num_paths] = X;\n"
         "    }\n"
         "}\n";
+}
+
+template<sde::concepts::FloatingPoint Num>
+void sde::engine::GPU::MetalBuilder<Num>::append_extra_functions() {
+    source += "template<typename T>\n";
+    source += "T lse_max(T a, T b, T k = 10.0) {\n";
+    source += "    T m = max(a, b);\n";
+    source += "    return m + log(exp(k * (a - m)) + exp(k * (b - m))) / k;\n";
+    source += "}\n\n";
+    source += "template<typename T>\n";
+    source += "T lse_min(T a, T b, T k = 10.0) {\n";
+    source += "    T m = min(a,b);\n";
+    source += "    return m - log(exp(k * (m - a)) + exp(k * (m - b))) / k;\n";
+    source += "}\n\n";
+    source += "template<typename T>\n";
+    source += "T softmax_weight(T a, T b, T k = 10.0) {\n";
+    source += "    return 1.0 / (1.0 + exp(k * (b - a)));\n";
+    source += "}\n\n";
 }
 
 

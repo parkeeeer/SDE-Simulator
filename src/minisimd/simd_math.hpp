@@ -125,59 +125,59 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<float> sde::simd::sqrt(simd<float> x) {
+    inline simd<float> sqrt(simd<float> x) {
         return simd<float>(_mm256_sqrt_ps(x.v));
     }
 
     template<>
-    inline simd<double> sde::simd::sqrt(simd<double> x) {
+    inline simd<double> sqrt(simd<double> x) {
         return simd<double>(_mm256_sqrt_pd(x.v));
     }
 
     template<>
-    inline simd<float> sde::simd::round(simd<float> x) {
+    inline simd<float> round(simd<float> x) {
         return simd<float>{_mm256_round_ps(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)};
     }
 
     template<>
-    inline simd<double> sde::simd::round(simd<double> x) {
+    inline simd<double> round(simd<double> x) {
         return simd<double>{_mm256_round_pd(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)}
     }
 
     template<>
-    inline simd<float> sde::simd::abs(simd<float> x) {
+    inline simd<float> abs(simd<float> x) {
         __m256 sign_mask = _mm256_set1_ps(-1.0f);
         return simd<float>{_mm256_andnot_ps(sign_mask, x.v)};
     }
 
     template<>
-    inline simd<double> sde::simd::abs(simd<double> x) {
+    inline simd<double> abs(simd<double> x) {
         __m256d sign_mask = _mm256_set1_pd(-1.0);
         return simd<double>{_mm256_andnot_pd(sign_mask, x.v)};
     }
 
     template<>
-    inline simd<float> sde::simd::max(simd<float> a, simd<float> b) {
+    inline simd<float> max(simd<float> a, simd<float> b) {
         return simd<float>(_mm256_max_ps(a.v, b.v));
     }
 
     template<>
-    inline simd<double> sde::simd::max(simd<double> a, simd<double> b) {
+    inline simd<double> max(simd<double> a, simd<double> b) {
         return simd<double>(_mm256_max_pd(a.v, b.v));
     }
 
     template<>
-    inline simd<float> sde::simd::min(simd<float> a, simd<float> b) {
+    inline simd<float> min(simd<float> a, simd<float> b) {
         return simd<float>(_mm256_min_ps(a.v, b.v));
     }
 
     template<>
-    inline simd<double> sde::simd::max(simd<double> a, simd<double> b) {
+    inline simd<double> max(simd<double> a, simd<double> b) {
         return simd<double>(_mm256_max_pd(a.v, b.v));
     }
 
     template<>
-    inline simd<float> sde::simd::detail::pow2(simd<float> x) {
+    inline simd<float> detail::pow2(simd<float> x) {
         __m256i x_int = _mm256_cvtps_epi32(x.v);
         __m256i bias = _mm256_add_epi32(x_to_int, _mm256_set1_epi32(127));
         __m256 exponent = _mm256_slli_epi32(bias, 23);
@@ -186,7 +186,7 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<double> sde::simd::detail::pow2(simf<double> x) {
+    inline simd<double> detail::pow2(simf<double> x) {
         __m128d lo_pd = _mm256_castpd256_pd128(x.v);
         __m128d hi_pd = _mm256_extractf128_pd(x.v, 1)
 
@@ -204,67 +204,67 @@ namespace sde::simd {
     }
 #elif SDE_HAS_NEON
     template<>
-    inline simd<float> sde::simd::fma(simd<float> a, simd<float> b, simd<float> c) {
+    inline simd<float> fma(simd<float> a, simd<float> b, simd<float> c) {
         return simd<float>(vmlaq_f32(c.v, a.v, b.v));
     }
 
     template<>
-    inline simd<double> sde::simd::fma(simd<double> a, simd<double> b, simd<double> c) {
+    inline simd<double> fma(simd<double> a, simd<double> b, simd<double> c) {
         return simd<double>(vmlaq_f64(c.v, a.v, b.v));
     }
 
     template<>
-    inline simd<float> sde::simd::round(simd<float> x) {
+    inline simd<float> round(simd<float> x) {
         return simd<float>(vrndnq_f32(x.v));
     }
 
     template<>
-    inline simd<double> sde::simd::round(simd<double> x) {
+    inline simd<double> round(simd<double> x) {
         return simd<double>(vrndnq_f64(x.v));
     }
 
     template<>
-    inline simd<float> sde::simd::sqrt(simd<float> x) {
+    inline simd<float> sqrt(simd<float> x) {
         return simd<float>(vsqrtq_f32(x.v));
     }
 
     template<>
-    inline simd<double> sde::simd::sqrt(simd<double> x) {
+    inline simd<double> sqrt(simd<double> x) {
         return simd<double>(vsqrtq_f64(x.v));
     }
 
     template<>
-    inline simd<float> sde::simd::abs(simd<float> x) {
+    inline simd<float> abs(simd<float> x) {
         return simd<float>(vabsq_f32(x.v));
     }
 
     template<>
-    inline simd<double> sde::simd::abs(simd<double> x) {
+    inline simd<double> abs(simd<double> x) {
         return simd<double>(vabsq_f64(x.v));
     }
 
     template<>
-    inline simd<float> sde::simd::max(simd<float> a, simd<float> b) {
+    inline simd<float> max(simd<float> a, simd<float> b) {
         return simd<float>(vmaxq_f32(a.v,b.v));
     }
 
     template<>
-    inline simd<double> sde::simd::max(simd<double> a, simd<double> b) {
+    inline simd<double> max(simd<double> a, simd<double> b) {
         return simd<double>(vmaxq_f64(a.v,b.v));
     }
 
     template<>
-    inline simd<float> sde::simd::min(simd<float> a, simd<float> b) {
+    inline simd<float> min(simd<float> a, simd<float> b) {
         return simd<float>(vminq_f32(a.v,b.v));
     }
 
     template<>
-    inline simd<double> sde::simd::min(simd<double> a, simd<double> b) {
+    inline simd<double> min(simd<double> a, simd<double> b) {
         return simd<double>(vminq_f64(a.v,b.v));
     }
 
     template<>
-    inline simd<float> sde::simd::detail::pow2(simd<float> x) {
+    inline simd<float> detail::pow2(simd<float> x) {
         int32x4_t x_to_int = vcvtq_s32_f32(x.v);
 
         int32x4_t bias = vaddq_s32(x_to_int, vdupq_n_s32(127));
@@ -274,7 +274,7 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<double> sde::simd::detail::pow2(simd<double> x) {
+    inline simd<double> detail::pow2(simd<double> x) {
         int64x2_t x_to_int = vcvtq_s64_f64(x.v);
 
         int64x2_t bias = vaddq_s64(x_to_int, vdupq_n_s64(1023));
@@ -578,22 +578,22 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<double> detail::exp_eval(simd<double> r) {
+    inline simd<double> detail::exp_eval(simd<double> x) {
         // Minimax polynomial for exp(r) on [-0.35, 0.35]
         // Degree 10 from Sollya
 
         simd<double> p(2.5022322536e-8);
-        p = fma(p, r, simd<double>(2.7629817929e-7));
-        p = fma(p, r, simd<double>(2.7557508395e-6));
-        p = fma(p, r, simd<double>(2.4801566879e-5));
-        p = fma(p, r, simd<double>(1.9841269707e-4));
-        p = fma(p, r, simd<double>(1.3888888934e-3));
-        p = fma(p, r, simd<double>(8.3333333326e-3));
-        p = fma(p, r, simd<double>(4.1666666666e-2));
-        p = fma(p, r, simd<double>(0.166666666666));
-        p = fma(p, r, simd<double>(0.5));
-        p = fma(p, r, simd<double>(1.0));
-        p = fma(p, r, simd<double>(1.0));
+        p = fma(p, x, simd<double>(2.7629817929e-7));
+        p = fma(p, x, simd<double>(2.7557508395e-6));
+        p = fma(p, x, simd<double>(2.4801566879e-5));
+        p = fma(p, x, simd<double>(1.9841269707e-4));
+        p = fma(p, x, simd<double>(1.3888888934e-3));
+        p = fma(p, x, simd<double>(8.3333333326e-3));
+        p = fma(p, x, simd<double>(4.1666666666e-2));
+        p = fma(p, x, simd<double>(0.166666666666));
+        p = fma(p, x, simd<double>(0.5));
+        p = fma(p, x, simd<double>(1.0));
+        p = fma(p, x, simd<double>(1.0));
 
         return p;
     }

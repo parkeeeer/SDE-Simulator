@@ -149,6 +149,7 @@ array2d<Num> sde::GPU_dispatch(Config& config) {
 #elif HAS_METAL
 template<concepts::FloatingPoint Num>
 array2d<Num> sde::GPU_dispatch(Config& config) {
+    if (config.precision == precision_level::double_precision) throw std::runtime_error("double precision is not supported by metal");
     array2d<Num> results(config.num_steps, config.num_paths, Layout::TimeMajor, config.dt, 0, 1);
     frontend::AST<Num> diff = frontend::parse<Num>(config.diffusion, config.env);
     frontend::AST<Num> drift = frontend::parse<Num>(config.drift, config.env);

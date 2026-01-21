@@ -15,7 +15,7 @@
 #include <random>
 #include "get_value.hpp"
 
-#include "results.h"
+#include "results.hpp"
 
 
 /*

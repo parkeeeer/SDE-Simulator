@@ -11,10 +11,10 @@ sde::engine::GPU::MetalProgram<Num>::MetalProgram(const std::string& source){
     if(!device){
         throw std::runtime_error("Metal Device could not be created.");
     }
-    device_ = (__bridge_retained void*)device;
+    device_ = (__bridge void*)device;
 
     id<MTLCommandQueue> queue = [device newCommandQueue];
-    command_queue_ = (__bridge_retained void*)queue;
+    command_queue_ = (__bridge void*)queue;
 
     NSString* src = [NSString stringWithUTF8String:source.c_str()];
     NSError* error = nil;
@@ -24,7 +24,7 @@ sde::engine::GPU::MetalProgram<Num>::MetalProgram(const std::string& source){
         NSLog(@"Metal compilation error: %@", error);
         throw std::runtime_error("Failed to compile Metal shader");
     }
-    library_ = (__bridge_retained void*)library;
+    library_ = (__bridge void*)library;
 
     id<MTLFunction> function = [library newFunctionWithName:@"sde_kernel"];
     if (!function) {
@@ -36,7 +36,7 @@ sde::engine::GPU::MetalProgram<Num>::MetalProgram(const std::string& source){
         NSLog(@"Pipeline creation error: %@", error);
         throw std::runtime_error("Failed to create pipeline");
     }
-    pipeline_ = (__bridge_retained void*)pipeline;
+    pipeline_ = (__bridge void*)pipeline;
 }
 
 template<sde::concepts::FloatingPoint Num>

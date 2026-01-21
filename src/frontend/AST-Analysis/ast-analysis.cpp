@@ -35,6 +35,7 @@ frontend::NodePtr<Num> clone(const frontend::NodePtr<Num>& node) {
     if (num) {
         return make_unique<frontend::NumNode<Num>>(*(num->value));
     }
+    throw std::runtime_error("quiet warnings");
 }
 
 template<concepts::fp_or_simd Num>
@@ -143,6 +144,25 @@ frontend::NodePtr<Num> frontend::differentiate(const NodePtr<Num>& expr, const s
                     make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[0]), clone(func->args[1]))), differentiate(func->args[1], var), BinOps::MULTIPLY),
                     make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[1]), clone(func->args[0]))), differentiate(func->args[0], var), BinOps::MULTIPLY),
                     BinOps::ADD);
+            case FuncIds::LSE_MAX:
+                if (pedantic) throw std::runtime_error("max function is not differentiable everywhere");
+                return make_unique<BinOpNode<Num>>(
+                    make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[0]), clone(func->args[1]))), differentiate(func->args[0], var), BinOps::MULTIPLY),
+                    make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[1]), clone(func->args[0]))), differentiate(func->args[1], var), BinOps::MULTIPLY),
+                    BinOps::ADD);
+            case FuncIds::LSE_MIN:
+                return make_unique<BinOpNode<Num>>(
+                    make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[0]), clone(func->args[1]))), differentiate(func->args[1], var), BinOps::MULTIPLY),
+                    make_unique<BinOpNode<Num>>(make_unique<FuncNode<Num>>(FuncIds::SOFTMAX, make_double_arg(clone(func->args[1]), clone(func->args[0]))), differentiate(func->args[0], var), BinOps::MULTIPLY),
+                    BinOps::ADD);
+            case FuncIds::SOFTMAX:
+                NodePtr<Num> w = clone(expr);
+                NodePtr<Num> one_minus_w = make_unique<BinOpNode<Num>>(make_unique<NumNode<Num>>(1.0), clone(w), BinOps::SUBTRACT);
+                NodePtr<Num> k = make_unique<NumNode<Num>>(10.0);
+                NodePtr<Num> base_deriv = make_unique<BinOpNode<Num>>(std::move(k), make_unique<BinOpNode<Num>>(std::move(w),std::move(one_minus_w), BinOps::MULTIPLY), BinOps::MULTIPLY);
+                NodePtr<Num> left_term = make_unique<BinOpNode<Num>>(clone(base_deriv), differentiate(func->args[0], var), BinOps::MULTIPLY);
+                NodePtr<Num> right_term = make_unique<BinOpNode<Num>>(make_unique<UnarOpNode<Num>>(std::move(base_deriv), UnarOps::NEGATE), differentiate(func->args[1], var), BinOps::MULTIPLY);
+                return make_unique<BinOpNode<Num>>(std::move(left_term), std::move(right_term), BinOps::ADD);
         }
     }
     auto num = dynamic_cast<const NumNode<Num>*>(expr.get());
@@ -242,6 +262,35 @@ frontend::NodePtr<Num> optimize_node(const frontend::NodePtr<Num>& expr, bool& c
                 }
                 return make_unique<frontend::BinOpNode<Num>>(optimize_node(bin->left, changed), optimize_node(bin->right, changed), frontend::BinOps::DIVIDE);
             }
+            case frontend::BinOps::POWER: {
+                auto num_left = dynamic_cast<frontend::NumNode<Num>*>(bin->left.get());
+                auto num_right = dynamic_cast<frontend::NumNode<Num>*>(bin->right.get());
+                if (num_left && num_right) {
+                    changed = true;
+                    return make_unique<frontend::NumNode<Num>>(math::pow(*num_left->value, *num_right->value));
+                }
+                if (num_right) {
+                    if (math::scalar_extract(*num_right->value) == 1.0) {
+                        changed = true;
+                        return clone(bin->left);
+                    }
+                    if (math::scalar_extract(*num_right->value) == 0.0) {
+                        changed = true;
+                        return make_unique<frontend::NumNode<Num>>(1.0);
+                    }
+                }
+                if (num_left) {
+                    if (math::scalar_extract(*num_left->value) == 0.0) {
+                        changed = true;
+                        return make_unique<frontend::NumNode<Num>>(0.0);
+                    }
+                    if (math::scalar_extract(*num_left->value) == 1.0) {
+                        changed = true;
+                        return make_unique<frontend::NumNode<Num>>(1.0);
+                    }
+                }
+                return make_unique<frontend::BinOpNode<Num>>(optimize_node(bin->left, changed), optimize_node(bin->right, changed), frontend::BinOps::POWER);
+            }
         }
     }
     auto func = dynamic_cast<frontend::FuncNode<Num>*>(expr.get());
@@ -302,6 +351,30 @@ frontend::NodePtr<Num> optimize_node(const frontend::NodePtr<Num>& expr, bool& c
                     return make_unique<frontend::NumNode<Num>>(math::tan(*num->value));
                 }
                 return make_unique<frontend::FuncNode<Num>>(frontend::FuncIds::TAN, make_single_arg(optimize_node(func->args[0], changed)));
+            }
+            case frontend::FuncIds::SINH: {
+                auto num = dynamic_cast<frontend::NumNode<Num>*>(func->args[0].get());
+                if (num) {
+                    changed = true;
+                    return make_unique<frontend::NumNode<Num>>(math::sinh(*num->value));
+                }
+                return make_unique<frontend::FuncNode<Num>>(frontend::FuncIds::SINH, make_single_arg(optimize_node(func->args[0], changed)));
+            }
+            case frontend::FuncIds::COSH: {
+                auto num = dynamic_cast<frontend::NumNode<Num>*>(func->args[0].get());
+                if (num) {
+                    changed = true;
+                    return make_unique<frontend::NumNode<Num>>(math::cosh(*num->value));
+                }
+                return make_unique<frontend::FuncNode<Num>>(frontend::FuncIds::COSH, make_single_arg(optimize_node(func->args[0], changed)));
+            }
+            case frontend::FuncIds::TANH: {
+                auto num = dynamic_cast<frontend::NumNode<Num>*>(func->args[0].get());
+                if (num) {
+                    changed = true;
+                    return make_unique<frontend::NumNode<Num>>(math::tanh(*num->value));
+                }
+                return make_unique<frontend::FuncNode<Num>>(frontend::FuncIds::TANH, make_single_arg(optimize_node(func->args[0], changed)));
             }
             case frontend::FuncIds::MAX: {
                 auto num1 = dynamic_cast<frontend::NumNode<Num>*>(func->args[0].get());
@@ -409,6 +482,10 @@ sde::frontend::AST<Num> sde::frontend::optimize_one_pass(const sde::frontend::AS
                     cout << "/";
                     break;
                 }
+                case sde::frontend::BinOps::POWER: {
+                    cout << "^";
+                    break;
+                }
             }
             ast_to_text(bin->right);
             cout << ")";
@@ -477,6 +554,27 @@ sde::frontend::AST<Num> sde::frontend::optimize_one_pass(const sde::frontend::AS
                     }
                     break;
                 }
+                case sde::frontend::FuncIds::SINH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        cout << "sinhf(";
+                    }else {
+                        cout << "sinh(";
+                    }
+                }
+                case sde::frontend::FuncIds::COSH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        cout << "coshf(";
+                    }else {
+                        cout << "cosh(";
+                    }
+                }
+                case sde::frontend::FuncIds::TANH: {
+                    if constexpr(std::is_same_v<Num, float>) {
+                        cout << "tanhf(";
+                    }else {
+                        cout << "tanh(";
+                    }
+                }
                 case sde::frontend::FuncIds::ABS: {
                     if constexpr(std::is_same_v<Num, float>) {
                         cout << "fabsf(";
@@ -500,6 +598,15 @@ sde::frontend::AST<Num> sde::frontend::optimize_one_pass(const sde::frontend::AS
                         cout << "fmin(";
                     }
                     break;
+                }
+                case sde::frontend::FuncIds::LSE_MAX: {
+                    cout << "lse_max(";
+                }
+                case sde::frontend::FuncIds::LSE_MIN: {
+                    cout << "lse_min(";
+                }
+                case sde::frontend::FuncIds::SOFTMAX: {
+                    cout << "softmax_weight(";
                 }
             }
             ast_to_text(func->args[0]);

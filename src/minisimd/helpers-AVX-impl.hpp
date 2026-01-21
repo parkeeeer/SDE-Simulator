@@ -6,8 +6,9 @@
 
 
 namespace sde::simd {
+
     template<>
-    inline simd_mask<float> sde::simd::operator!(simd_mask<float> x) {
+    inline simd_mask<float> operator!(simd_mask<float> x) {
         __m256 all_ones = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
         return simd_mask<float>{_mm256_xor_ps(x.v, all_ones)};
     }

@@ -19,9 +19,11 @@ namespace sde::engine::GPU {
         bool is_compiled = false;
         frontend::AST<Num>* drift, *diffusion;
         void append_device_expression(std::string_view name, const frontend::AST<Num>& ast);
+        void append_extra_functions();
     public:
 
         CudaBuilder(frontend::AST<Num>& drift, frontend::AST<Num>& diffusion) : source(""), drift(&drift), diffusion(&diffusion) {
+            append_extra_functions();
             append_device_expression("drift", drift);
             append_device_expression("diffusion", diffusion);
         }
@@ -168,6 +170,15 @@ namespace sde::detail{
                         source += "fmin(";
                     }
                     break;
+                }
+                case sde::frontend::FuncIds::LSE_MAX: {
+                    source += "lse_max(";
+                }
+                case sde::frontend::FuncIds::LSE_MIN: {
+                    source += "lse_min(";
+                }
+                case sde::frontend::FuncIds::SOFTMAX: {
+                    source += "softmax_weight(";
                 }
             }
             for (auto& arg : func->args) {
@@ -328,5 +339,41 @@ void sde::engine::GPU::CudaBuilder<Num>::append_milstein() {
     source += "        paths[path_idx + step * num_paths] = X;\n";
     source += "    }\n}\n";
 }
+
+template<sde::concepts::FloatingPoint Num>
+void sde::engine::GPU::CudaBuilder<Num>::append_extra_functions() {
+    std::string var;
+    std::string exp;
+    std::string log;
+    std::string max;
+    std::string min;
+    if constexpr (std::is_same_v<Num, float>) {
+        var = "float";
+        exp = "expf";
+        log = "logf";
+        max = "fmaxf";
+        min = "fminf";
+    } else {
+        var = "double";
+        exp = "exp";
+        log = "log";
+        max = "fmax";
+        min = "fmin";
+    }
+    source += "__device__ " + var + " lse_max(" + var + " a, " + var + " b, " + var + " k = 10.0) {\n";
+    source += "    " + var + " m = " + max + "(a,b);\n";
+    source += "    return m + " + log + "(" + exp + "(k * (a - m)) + " + exp + "(k * (b - m))) / k;\n";
+    source += "}\n\n";
+
+    source += "__device__ " + var + " lse_min(" + var + " a, " + var + " b, " + var + " k = 10.0) {\n";
+    source += "    " + var + " m = " + min + "(a,b);\n";
+    source += "    return m + " + log + "(" + exp + "(k * (m - a)) + " + exp + "(k * (m - b))) / k;\n";
+    source += "}\n\n";
+
+    source += "__device__ " + var + " softmax_weight(" + var + " a, " + var + " b, " + var + " k = 10.0) {\n";
+    source += "    return 1.0 / (10 + " + exp + "(k * (b - a)));";
+    source += "}\n\n";
+}
+
 
 

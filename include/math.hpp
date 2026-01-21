@@ -188,6 +188,7 @@ namespace sde::math {
     //returns the weight of a in the softmax
     //for min function this will actually give the weight of b
     //useful to take derivative of lse
+    //sigmoid to avoid overflow
     template<concepts::fp_or_simd Num>
     Num softmax_weight(Num a, Num b, Num k = simd_cast<Num>(10.0)) {
         return simd_cast<Num>(1.0) / (simd_cast<Num>(1.0) + exp(k * (b - a)));

@@ -768,6 +768,9 @@ struct Program{
                 case operation::SIN:
                 case operation::COS:
                 case operation::TAN:
+                case operation::SINH:
+                case operation::COSH:
+                case operation::TANH:
                 case operation::EXP:
                 case operation::LOG:
                 case operation::SQRT:
