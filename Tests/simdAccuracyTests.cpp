@@ -1,6 +1,7 @@
 
 
 #include "../src/minisimd/minisimd.hpp"
+#include <iostream>
 
 int main() {
     std::cout << "==================Begin Float Tests==================\n\n";

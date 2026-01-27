@@ -47,3 +47,7 @@ target_link_libraries(DerivativeTests PUBLIC SDE-Frontend SDE-AST_Analysis)
 target_compile_features(DerivativeTests PRIVATE cxx_std_23)
 
 doctest_discover_tests(DerivativeTests TEST_PREFIX "derivative.")
+
+add_executable(simd-acc-tests simdAccuracyTests.cpp)
+
+
