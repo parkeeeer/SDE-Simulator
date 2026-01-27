@@ -107,7 +107,7 @@ void sde::engine::CPU::euler_maruyama_runner(lane_t<Num>* paths, const size_t fi
       }else{
         x = paths[idx - num_paths];
       }
-      Num t = Num(static_cast<lane_t<Num>>(step)) * dt;
+      Num t = Num(step-1) * dt;
       Num new_lane = x + a(x, t) * dt + b(x, t) * dw;
       if constexpr (is_simd<Num>()) {
         new_lane.store(&paths[idx]);
@@ -144,7 +144,7 @@ void sde::engine::CPU::milstein_runner(lane_t<Num>* paths, const size_t first_pa
       }else{
         x = paths[idx - num_paths];
       }
-      Num t = Num(static_cast<lane_t<Num>>(step)) * dt;
+      Num t = Num(step-1) * dt;
       Num b_lane = b(x,t);
       Num new_lane = x + a(x,t) * dt + b_lane * dw + Num(static_cast<lane_t<Num>>(.5)) * b_lane * b_prime(x,t) * (dw * dw - dt);
       if constexpr (is_simd<Num>()){

@@ -172,7 +172,8 @@ throw std::runtime_error("Cuda is not supported by your machine");
 
 template<sde::concepts::FloatingPoint Num>
 pybind11::array_t<Num> SDESimulator::simulate_bytecode(size_t num_paths, size_t num_steps, Num dt, Num initial_value, std::string_view method, uint64_t seed, const sde::frontend::Environment<double>& env) {
-    size_t simd_width = sde::simd::simd<Num>::size;
+    using vec = sde::simd::simd<Num>;
+    size_t simd_width = vec::size;
     size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
     size_t size = padded_paths * num_steps;
     Num* paths = sde::memory::aligned_allocator<Num>{}.allocate(size);
@@ -181,7 +182,7 @@ pybind11::array_t<Num> SDESimulator::simulate_bytecode(size_t num_paths, size_t 
         sde::memory::aligned_allocator<Num>{}.deallocate(static_cast<Num*>(p), 1);
     });
 
-    auto arr = py::array_t<Num>({num_steps, num_paths},{num_paths * sizeof(Num), sizeof(Num)} ,paths, free_when_done);
+    auto arr = py::array_t<Num>({num_steps, padded_paths},{padded_paths * sizeof(Num), sizeof(Num)} ,paths, free_when_done);
     auto buf = arr.request();
     Num* ptr = static_cast<Num*>(buf.ptr);
     sde::Config config;
@@ -190,29 +191,30 @@ pybind11::array_t<Num> SDESimulator::simulate_bytecode(size_t num_paths, size_t 
     config.dt = dt;
     config.initial_value = initial_value;
     config.seed = seed;
-    auto drift_ast = sde::frontend::parse<Num>(drift, env);
-    auto diff_ast = sde::frontend::parse<Num>(drift, env);
+    auto drift_ast = sde::frontend::parse<vec>(drift, env);
+    auto diff_ast = sde::frontend::parse<vec>(diffusion, env);
     auto drift_bytecode = sde::frontend::compile(drift_ast);
     auto diff_bytecode = sde::frontend::compile(diff_ast);
-    sde::engine::CPU::BytecodeSafeEval<Num> drift_eval(drift_bytecode);
-    sde::engine::CPU::BytecodeSafeEval<Num> diff_eval(diff_bytecode);
+    sde::engine::CPU::BytecodeSafeEval<vec> drift_eval(drift_bytecode);
+    sde::engine::CPU::BytecodeSafeEval<vec> diff_eval(diff_bytecode);
     if (method == "euler" || method == "em" || method == "euler-maruyama") {
         sde::engine::CPU::euler_functor em;
-        sde::engine::CPU::dispatch_simulation<Num>(config, ptr, drift_eval, diff_eval, diff_eval, em, padded_paths);
+        sde::engine::CPU::dispatch_simulation<vec>(config, ptr, drift_eval, diff_eval, diff_eval, em, padded_paths);
     }else if (method == "milstein") {
         sde::engine::CPU::milstein_functor milstein;
         auto b_prime = sde::frontend::differentiate(diff_ast, "x");
         auto b_prime_opt = sde::frontend::optimize(b_prime);
         auto b_prime_bytecode = sde::frontend::compile(b_prime_opt);
-        sde::engine::CPU::BytecodeSafeEval<Num> b_prime_eval(b_prime_bytecode);
-        sde::engine::CPU::dispatch_simulation<Num>(config, ptr, drift_eval, diff_eval, b_prime_eval, milstein, padded_paths);
+        sde::engine::CPU::BytecodeSafeEval<vec> b_prime_eval(b_prime_bytecode);
+        sde::engine::CPU::dispatch_simulation<vec>(config, ptr, drift_eval, diff_eval, b_prime_eval, milstein, padded_paths);
     }
     return arr;
 }
 
 template<sde::concepts::FloatingPoint Num>
 pybind11::array_t<Num> SDESimulator::simulate_ast(size_t num_paths, size_t num_steps, Num dt, Num initial_value, std::string_view method, uint64_t seed, const sde::frontend::Environment<double>& env) {
-    size_t simd_width = sde::simd::simd<Num>::size;
+    using vec = sde::simd::simd<Num>;
+    size_t simd_width = vec::size;
     size_t padded_paths = ((num_paths + simd_width - 1) / simd_width) * simd_width;
     size_t size = padded_paths * num_steps;
     Num* paths = sde::memory::aligned_allocator<Num>{}.allocate(size);
@@ -221,7 +223,7 @@ pybind11::array_t<Num> SDESimulator::simulate_ast(size_t num_paths, size_t num_s
         sde::memory::aligned_allocator<Num>{}.deallocate(static_cast<Num*>(p), 1);
     });
 
-    auto arr = py::array_t<Num>({num_steps, num_paths},{num_paths * sizeof(Num), sizeof(Num)} ,paths, free_when_done);
+    auto arr = py::array_t<Num>({num_steps, padded_paths},{padded_paths * sizeof(Num), sizeof(Num)} ,paths, free_when_done);
     auto buf = arr.request();
     Num* ptr = static_cast<Num*>(buf.ptr);
     sde::Config config;
@@ -230,19 +232,19 @@ pybind11::array_t<Num> SDESimulator::simulate_ast(size_t num_paths, size_t num_s
     config.dt = dt;
     config.initial_value = initial_value;
     config.seed = seed;
-    auto drift_ast = sde::frontend::parse<Num>(drift, env);
-    auto diff_ast = sde::frontend::parse<Num>(drift, env);
-    sde::engine::CPU::ASTSafeEval<Num> drift_eval(drift_ast);
-    sde::engine::CPU::ASTSafeEval<Num> diff_eval(diff_ast);
+    auto drift_ast = sde::frontend::parse<vec>(drift, env);
+    auto diff_ast = sde::frontend::parse<vec>(diffusion, env);
+    sde::engine::CPU::ASTSafeEval<vec> drift_eval(drift_ast);
+    sde::engine::CPU::ASTSafeEval<vec> diff_eval(diff_ast);
     if (method == "euler" || method == "em" || method == "euler-maruyama") {
         sde::engine::CPU::euler_functor em;
-        sde::engine::CPU::dispatch_simulation<Num>(config, ptr, drift_eval, diff_eval, diff_eval, em, padded_paths);
+        sde::engine::CPU::dispatch_simulation<vec>(config, ptr, drift_eval, diff_eval, diff_eval, em, padded_paths);
     }else if (method == "milstein") {
         sde::engine::CPU::milstein_functor milstein;
         auto b_prime = sde::frontend::differentiate(diff_ast, "x");
         auto b_prime_opt = sde::frontend::optimize(b_prime);
-        sde::engine::CPU::ASTSafeEval<Num> b_prime_eval(b_prime_opt);
-        sde::engine::CPU::dispatch_simulation<Num>(config, ptr, drift_eval, diff_eval, b_prime_eval, milstein, padded_paths);
+        sde::engine::CPU::ASTSafeEval<vec> b_prime_eval(b_prime_opt);
+        sde::engine::CPU::dispatch_simulation<vec>(config, ptr, drift_eval, diff_eval, b_prime_eval, milstein, padded_paths);
     }
     return arr;
 }
