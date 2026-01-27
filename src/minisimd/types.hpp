@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 
 #ifdef _MSC_VER
 #define SIMD_INLINE __forceinline
