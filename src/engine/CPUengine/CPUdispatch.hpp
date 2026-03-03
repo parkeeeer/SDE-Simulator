@@ -10,15 +10,7 @@
 #include "CPUengine.hpp"
 #include "math.hpp"
 
-#if __has_include(<simd>)
-  #include <simd>
-  namespace stdx = std;
-#elif __has_include(<experimental/simd>)
-  #include <experimental/simd>
-  namespace stdx = std::experimental;
-#else
-  #error "No std::simd available"
-#endif
+
 
 
 namespace sde::engine::CPU {

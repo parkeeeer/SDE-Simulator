@@ -59,6 +59,7 @@ CMakeUserPresets.json
 /build/
 /cmake-build-*/
 CMakeFiles/
+nocommit/
 CMakeCache.txt
 compile_commands.json
 *.user

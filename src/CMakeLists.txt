@@ -1,4 +1,10 @@
 add_subdirectory(frontend)
 add_subdirectory(utils)
 add_subdirectory(engine)
-#add_subdirectory(input-output)
+if(BUILD_CLI)
+    add_subdirectory(cli)
+endif()
+
+if(BUILD_PYTHON_BINDINGS)
+    add_subdirectory(python)
+endif()

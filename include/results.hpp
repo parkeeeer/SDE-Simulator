@@ -214,23 +214,23 @@ namespace sde {
 
         const PathProxy operator[](size_t path) const {
             if (layout == Layout::PathMajor) {
-                return RowProxy(_data + path * dim2, 1);
+                return PathProxy(_data + path * dim2, 1);
             }
-            return RowProxy(_data + path, dim2);
+            return PathProxy(_data + path, dim2);
         }
 
         Num& operator()(size_t path, size_t time) {
             if (layout == Layout::PathMajor) {
                 return _data[path * dim2 + time];
             }
-            return _data[path + time * dim1];
+            return _data[time * dim2 + path];;
         }
 
         const Num& operator()(size_t path, size_t time) const {
             if (layout == Layout::PathMajor) {
                 return _data[path * dim2 + time];
             }
-            return _data[path + time * dim1];
+            return _data[time * dim2 + path];;
         }
 
         Num& get_raw(size_t row, size_t col) {

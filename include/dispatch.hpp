@@ -1,8 +1,10 @@
 #pragma once
-#include <thread>
+#include <thread> //for hardware_concurrency
+#include <random> //for random_device
 #include "allocator.hpp"
 #include "frontend.hpp"
-#include "results.h"
+#include "results.hpp"
+
 
 
 namespace sde {
@@ -18,7 +20,7 @@ namespace sde {
 
     struct Config {
 
-        uint64_t seed = 12345;
+        uint64_t seed = std::random_device{}();
         double dt;
         double initial_value = 0;
         std::string diffusion;
@@ -46,7 +48,11 @@ namespace sde {
         }
     };
 
-
+    /*
+     * These functions will return a 2d array with the simulation data for the simulation specified in config
+     * all of these will return the data in a time-major format, but remember that array2d always uses <path>, <step>
+     * for indexing. Also remember that metal cannot use doubles so do not use GPU_dispatch with doubles on macos
+     */
     template<concepts::FloatingPoint Num>
     array2d<Num> bytecode_dispatch(Config& config);
 

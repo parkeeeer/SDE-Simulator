@@ -8,16 +8,6 @@
 
 
 
-#if __has_include(<simd>)
-  #include <simd>
-  namespace stdx = std;
-#elif __has_include(<experimental/simd>)
-  #include <experimental/simd>
-  namespace stdx = std::experimental;
-#else
-  #error "No std::simd available"
-#endif
-
 #include <concepts>
 #include <type_traits>
 
@@ -42,12 +32,12 @@ namespace sde::rng {
     template<sde::concepts::fp_or_simd Num>
     Num random_normal(Num stddev, Xoshiro256Plus& rng, BMstate<concepts::lane_t<Num>>& state){
         if constexpr(concepts::is_native_simd<Num>::value) {
-            Num result = Num();
-            for(size_t i = 0; i < Num::size(); i++){
+            concepts::lane_t<Num> result[Num::size];
+            for(size_t i = 0; i < Num::size; i++){
                 concepts::lane_t<Num> ref = stddev[i];
                 result[i] = random_normal(ref, rng, state);
             }
-            return result;
+            return Num::load(result);
         } else {
             Num u = random_uniform<Num>(rng);
             Num v = random_uniform<Num>(rng);

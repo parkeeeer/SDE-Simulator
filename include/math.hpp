@@ -10,11 +10,11 @@ namespace sde::math {
     constexpr Num simd_cast(double val) {
         if constexpr(std::is_same_v<Num, double>) {
             return val;
-        }else if constexpr(std::is_same_v<Num, stdx::native_simd<double>>) {
+        }else if constexpr(std::is_same_v<Num, simd::doublev>) {
             return static_cast<Num>(val);
         }else if constexpr(std::is_same_v<Num, float>) {
             return static_cast<Num>(val);
-        }else if constexpr(std::is_same_v<Num, stdx::native_simd<float>>) {
+        }else if constexpr(std::is_same_v<Num, simd::floatv>) {
             return static_cast<Num>(static_cast<float>(val));
         }
     }
@@ -35,10 +35,6 @@ namespace sde::math {
             return 1e-6f;
         } else if constexpr (std::is_same_v<Num,double>) {
             return 1e-12;
-        }else if constexpr (std::is_same_v<Num,stdx::native_simd<float>>) {
-            return Num(1e-6f);
-        }else if constexpr (std::is_same_v<Num,stdx::native_simd<double>>) {
-            return Num(1e-12);
         }
     }
 
@@ -47,70 +43,91 @@ namespace sde::math {
     template<concepts::fp_or_simd Num>
     Num sqrt(Num x) {
         using std::sqrt;
-        using stdx::sqrt;
+        using simd::sqrt;
         return sqrt(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num log(Num x) {
         using std::log;
-        using stdx::log;
+        using simd::log;
         return log(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num abs(Num x) {
         using std::abs;
-        using stdx::abs;
+        using simd::abs;
         return abs(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num sin(Num x) {
         using std::sin;
-        using stdx::sin;
+        using simd::sin;
         return sin(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num cos(Num x) {
         using std::cos;
-        using stdx::cos;
+        using simd::cos;
         return cos(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num tan(Num x) {
         using std::tan;
-        using stdx::tan;
+        using simd::tan;
         return tan(x);
+    }
+
+    template<concepts::fp_or_simd Num>
+    Num sinh(Num x) {
+        using std::sinh;
+        using simd::sinh;
+        return sinh(x);
+    }
+
+    template<concepts::fp_or_simd Num>
+    Num cosh(Num x) {
+        using std::cosh;
+        using simd::cosh;
+        return cosh(x);
+    }
+
+    template<concepts::fp_or_simd Num>
+    Num tanh(Num x) {
+        using std::tanh;
+        using simd::tanh;
+        return tanh(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num exp(Num x) {
         using std::exp;
-        using stdx::exp;
+        using simd::exp;
         return exp(x);
     }
 
     template<concepts::fp_or_simd Num>
     Num min(Num a, Num b) {
         using std::min;
-        using stdx::min;
+        using simd::min;
         return min(a,b);
     }
 
     template<concepts::fp_or_simd Num>
     Num max(Num a, Num b) {
         using std::max;
-        using stdx::max;
+        using simd::max;
         return max(a,b);
     }
 
     template<concepts::fp_or_simd Num>
     Num pow(Num a, Num b) {
         using std::pow;
-        using stdx::pow;
+        using simd::pow;
         return pow(a,b);
     }
 
@@ -119,7 +136,7 @@ namespace sde::math {
     //their math functions as constexpr
     template<concepts::fp_or_simd Num>
     inline Num safe_log(Num input){
-        return log(max(input, static_cast<Num>(epsilon<Num>())));
+        return log(max(input, Num{epsilon<concepts::lane_t<Num>>()}));
     }
 
     //clamps the input to zero to avoid problems with domain
@@ -133,15 +150,17 @@ namespace sde::math {
     inline Num safe_div(Num numerator, Num denominator){
         if constexpr (concepts::is_native_simd<Num>::value) {
             const Num eps = Num(epsilon<concepts::lane_t<Num>>());
-            // Clamp denominator away from zero
-            Num safe_denom = stdx::copysign(stdx::max(stdx::abs(denominator), eps), denominator);
+            Num abs_denom = math::abs(denominator);
+            Num safe_abs = max(abs_denom, eps);
+            Num sign = denominator / abs_denom; //+-1
+            Num safe_denom = safe_abs * sign;
             return numerator / safe_denom;
         }else {
-            if (abs(denominator) <= static_cast<Num>(epsilon<Num>())) {
+            if (abs(denominator) <= Num{epsilon<Num>()}) {
                 if(denominator >= static_cast<Num>(0)) {
-                    return numerator / static_cast<Num>(epsilon<Num>());
+                    return numerator / Num{epsilon<Num>()};
                 } else {
-                    return numerator / -static_cast<Num>(epsilon<Num>());
+                    return numerator / -Num{epsilon<Num>()};
                 }
             }
             return numerator / denominator;
@@ -169,6 +188,7 @@ namespace sde::math {
     //returns the weight of a in the softmax
     //for min function this will actually give the weight of b
     //useful to take derivative of lse
+    //sigmoid to avoid overflow
     template<concepts::fp_or_simd Num>
     Num softmax_weight(Num a, Num b, Num k = simd_cast<Num>(10.0)) {
         return simd_cast<Num>(1.0) / (simd_cast<Num>(1.0) + exp(k * (b - a)));

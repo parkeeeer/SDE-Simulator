@@ -27,7 +27,18 @@ template<class Num>
 class Environment{
     std::unordered_map<std::string, Num> map;
     public:
-    Environment() = default;
+    Environment(){
+        add_param("pi", M_PI);
+        add_param("tau", M_PI * 2);
+        add_param("e", M_E);
+    }
+
+    Environment(const std::unordered_map<std::string, Num>&& a) {
+        map = a;
+        add_param("pi", M_PI);
+        add_param("tau", M_PI * 2);
+        add_param("e", M_E);
+    }
 
     Num get_param(const std::string& name) const{
         if(is_param(name)){
@@ -36,6 +47,8 @@ class Environment{
             throw std::runtime_error("parameter not found in environment: " + name);
         }
     }
+
+
 
 
     void add_param(const std::string& name, Num value) {
@@ -52,6 +65,22 @@ class Environment{
 
     auto begin() const {return map.begin();}
     auto end() const {return map.end();}
+
+    void print_params() const {
+        for (const auto& param : map) {
+            std::cout << param.first << "=" << param.second << ", ";
+        }
+    }
+
+    std::string to_string() const {
+        std::string result;
+        for (const auto& param : map) {
+            result += param.first + "=" + std::to_string(param.second)  + ", ";
+        }
+        result.pop_back();
+        result.pop_back();
+        return result;
+    }
 };
 
 

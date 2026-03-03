@@ -69,6 +69,15 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
             case FuncIds::TAN:
                 program.instrs.push_back(instruction{operation::TAN, 0});
                 break;
+            case FuncIds::SINH:
+                program.instrs.push_back(instruction{operation::SINH, 0});
+                break;
+            case FuncIds::COSH:
+                program.instrs.push_back(instruction{operation::COSH, 0});
+                break;
+            case FuncIds::TANH:
+                program.instrs.push_back(instruction{operation::TANH, 0});
+                break;
             case FuncIds::ABS:
                 program.instrs.push_back(instruction{operation::ABS, 0});
                 break;
@@ -78,12 +87,20 @@ void Compiler<Num>::convert(ASTNode<Num>* node){
             case FuncIds::MIN:
                 program.instrs.push_back(instruction{operation::MIN, 0});
                 break;
+            case FuncIds::LSE_MAX:
+                program.instrs.push_back(instruction{operation::LSE_MAX, 0});
+                break;
+            case FuncIds::LSE_MIN:
+                program.instrs.push_back(instruction{operation::LSE_MIN, 0});
+                break;
+            case FuncIds::SOFTMAX:
+                program.instrs.push_back(instruction{operation::SOFTMAX, 0});
+                break;
         }
-        return;
     }
 }
 
 template class sde::frontend::Compiler<float>;
 template class sde::frontend::Compiler<double>;
-template class sde::frontend::Compiler<stdx::native_simd<float>>;
-template class sde::frontend::Compiler<stdx::native_simd<double>>;
+template class sde::frontend::Compiler<sde::simd::floatv>;
+template class sde::frontend::Compiler<sde::simd::doublev>;

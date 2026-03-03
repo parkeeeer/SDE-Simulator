@@ -8,12 +8,10 @@
     namespace sde::memory{
 
         constexpr size_t get_simd_alignment() {
-            #if defined(__AVX__) || defined(__AVX2__)
-            return 32;
-            #elif defined(__AVX512F__)
+            #if defined(__AVX512F__)
             return 64;
-            #elif defined(__SSE4_2__) || defined(__SSE4_1__) || defined(__SSSE3__) || defined(__SSE3__) || defined(__SSE2__) || defined(__SSE__)
-            return 16;
+            #elif defined(__AVX__) || defined(__AVX2__)
+            return 32;
             #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
             return 16;
             #else
