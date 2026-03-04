@@ -16,7 +16,6 @@ namespace sde::engine::GPU {
         CUfunction moduleFunction{};
     public:
         explicit CudaProgram(const std::string& source) {
-            std::cout << source << std::endl;
             nvrtcResult r1 = nvrtcCreateProgram(&program, source.c_str(), "kernel.cu", 0, nullptr, nullptr);
             if (r1 != NVRTC_SUCCESS) {
                 std::cout << "error on nvrtc create program: ";
@@ -58,7 +57,6 @@ namespace sde::engine::GPU {
 
         //paths should be on device
         void launch(Num* paths, unsigned long long seed, Num dt, Num t0, Num initial_value, unsigned int num_paths, unsigned int num_steps){
-            std::cout << initial_value << "\n";
             void* args[] = {&paths, &seed, &dt, &t0, &initial_value, &num_paths, &num_steps};
             int block_size = 256;
             int grid_size = (num_paths + block_size - 1) / block_size;
