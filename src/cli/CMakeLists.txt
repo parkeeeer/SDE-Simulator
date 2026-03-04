@@ -1,9 +1,8 @@
 add_executable(SDE-CLI cli.cpp)
 
-add_library(SDE-CLI-LIB STATIC exec_cli.cpp run_cli.cpp cache_manip.cpp sql_cache.cpp)
-target_link_libraries(SDE-CLI-LIB PUBLIC SDE-Simulator)
+add_subdirectory(third_party/sqlite3)
 
-find_package(SQLite3 REQUIRED)
-target_link_libraries(SDE-CLI-LIB PRIVATE SQLite::SQLite3)
+add_library(SDE-CLI-LIB STATIC exec_cli.cpp run_cli.cpp cache_manip.cpp sql_cache.cpp)
+target_link_libraries(SDE-CLI-LIB PUBLIC SDE-Simulator sqlite3)
 
 target_link_libraries(SDE-CLI PUBLIC SDE-CLI-LIB)

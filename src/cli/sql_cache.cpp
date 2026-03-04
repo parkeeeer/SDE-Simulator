@@ -1,6 +1,7 @@
 #include "sql_cache.hpp"
 
 #include <unordered_set>
+#include <sstream>
 
 #include "Variable_Environment.hpp"
 
@@ -28,7 +29,11 @@ namespace sde::cli {
     }
 
     Cache::Cache() {
+#ifdef _WIN32
+        std::string home = std::getenv("USERPROFILE");
+#else
         std::string home = std::getenv("HOME");
+#endif
         std::string path = home + "/.sde_cache.db";
         if (sqlite3_open(path.c_str(), &db) != SQLITE_OK) {
             throw std::runtime_error("Failed to open database: " + std::string(sqlite3_errmsg(db)));

@@ -20,9 +20,11 @@ namespace sde::engine::GPU {
         frontend::AST<Num>* drift, *diffusion;
         void append_device_expression(std::string_view name, const frontend::AST<Num>& ast);
         void append_extra_functions();
+        void append_rng();
     public:
 
         CudaBuilder(frontend::AST<Num>& drift, frontend::AST<Num>& diffusion) : source(""), drift(&drift), diffusion(&diffusion) {
+            append_rng();
             append_extra_functions();
             append_device_expression("drift", drift);
             append_device_expression("diffusion", diffusion);
@@ -212,6 +214,63 @@ namespace sde::detail{
     }
 }
 
+template<sde::concepts::FloatingPoint Num>
+void sde::engine::GPU::CudaBuilder<Num>::append_rng() {
+    source += "struct SplitMix64 {\n"
+              "    unsigned long long x;\n"
+              "    __device__ explicit SplitMix64(unsigned long long seed) : x(seed) {}\n"
+              "    __device__ unsigned long long next() {\n"
+              "        unsigned long long z = (x += 0x9E3779B97F4A7C15ull);\n"
+              "        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ull;\n"
+              "        z = (z ^ (z >> 27)) * 0x94D049BB133111EBull;\n"
+              "        return z ^ (z >> 31);\n"
+              "    }\n"
+              "};\n\n";
+
+    source += "struct xoshiro256Plus {\n"
+              "    unsigned long long s[4];\n"
+              "    __device__ static xoshiro256Plus seed(unsigned long long seed) {\n"
+              "        SplitMix64 a(seed);\n"
+              "        xoshiro256Plus x;\n"
+              "        for(int i = 0; i < 4; ++i) x.s[i] = a.next();\n"
+              "        return x;\n"
+              "    }\n"
+              "    __device__ static inline unsigned long long rot_left(unsigned long long v, int k) {\n"
+              "        return (v << k) | (v >> (64 - k));\n"
+              "    }\n"
+              "    __device__ unsigned long long next_u64() {\n"
+              "        unsigned long long const result = s[0] + s[3];\n"
+              "        unsigned long long const t = s[1] << 17;\n"
+              "        s[2] ^= s[0]; s[3] ^= s[1]; s[1] ^= s[2]; s[0] ^= s[3];\n"
+              "        s[2] ^= t; s[3] = rot_left(s[3], 45);\n"
+              "        return result;\n"
+              "    }\n";
+
+    if constexpr(std::is_same_v<Num, float>) {
+        source += "    __device__ inline float next() {\n"
+                  "        unsigned long long a = next_u64();\n"
+                  "        constexpr float scale = 1.0f / 16777216.0f;\n"
+                  "        return (float)(a >> 40) * scale;\n"
+                  "    }\n"
+                  "    __device__ inline float normal() {\n"
+                  "        float a = next(); float b = next();\n"
+                  "        return sqrtf(-2.0f * logf(a)) * cosf(2.0f * 3.14159265358979323846f * b);\n"
+                  "    }\n";
+    } else {
+        source += "    __device__ inline double next() {\n"
+                  "        unsigned long long a = next_u64();\n"
+                  "        constexpr double scale = 1.0 / 9007199254740992.0;\n"
+                  "        return (double)(a >> 11) * scale;\n"
+                  "    }\n"
+                  "    __device__ inline double normal() {\n"
+                  "        double a = next(); double b = next();\n"
+                  "        return sqrt(-2.0 * log(a)) * cos(2.0 * 3.14159265358979323846 * b);\n"
+                  "    }\n";
+    }
+
+    source += "};\n\n";
+}
+
 
 
 template<sde::concepts::FloatingPoint Num>
@@ -248,7 +307,7 @@ void sde::engine::GPU::CudaBuilder<Num>::append_euler() {
     }else {
         var_name = "double";
     }
-    source += "__global__ void kernel(\n";
+    source += "extern \"C\" __global__ void kernel(\n";
     source += var_name;
     source += "* __restrict__ paths,\n";
     source += "const unsigned long long seed,\n";
@@ -262,8 +321,7 @@ void sde::engine::GPU::CudaBuilder<Num>::append_euler() {
     source += "const unsigned int num_steps) {\n";
     source += "    unsigned int path_idx = blockIdx.x * blockDim.x + threadIdx.x;\n";
     source += "    if(path_idx >= num_paths) return;\n";
-    source += "    curandState_t state;\n";
-    source += "    curand_init(seed, path_idx, 0, &state);\n";
+    source += "    xoshiro256Plus rng = xoshiro256Plus::seed(seed + path_idx);\n";
     source += "    paths[path_idx] = initial_value;\n";
     source += "    ";
     source += var_name;
@@ -274,11 +332,11 @@ void sde::engine::GPU::CudaBuilder<Num>::append_euler() {
     source += " t = t0 + dt * step;\n";
     source += "        ";
     source += var_name;
-    source += " Dw = ";
+    source += " dW = ";
     if constexpr (std::is_same_v<Num, float>) {
-        source += "sqrtf(dt) * curand_normal(&state);\n";
+        source += "sqrtf(dt) * rng.normal();\n";
     }else {
-        source += "sqrt(dt) * curand_normal(&state);\n";
+        source += "sqrt(dt) * rng.normal();\n";
     }
     source += "        X = X + drift(X,t) * dt + diffusion(X,t) * dW;\n";
     source += "        paths[path_idx + step * num_paths] = X;\n";
@@ -299,7 +357,7 @@ void sde::engine::GPU::CudaBuilder<Num>::append_milstein() {
     }else {
         var_name = "double";
     }
-    source += "__global__ void kernel(\n";
+    source += "extern \"C\"__global__ void kernel(\n";
     source += var_name;
     source += "* __restrict__ paths,\n";
     source += "const unsigned long long seed,\n";
@@ -313,8 +371,7 @@ void sde::engine::GPU::CudaBuilder<Num>::append_milstein() {
     source += "const unsigned int num_steps) {\n";
     source += "    unsigned int path_idx = blockIdx.x * blockDim.x + threadIdx.x;\n";
     source += "    if(path_idx >= num_paths) return;\n";
-    source += "    curandState_t state;\n";
-    source += "    curand_init(seed, path_idx, 0, &state);\n";
+    source += "    xoshiro256Plus rng = xoshiro256Plus::seed(seed + path_idx);\n";
     source += "    paths[path_idx] = initial_value;\n";
     source += "    ";
     source += var_name;
@@ -325,17 +382,17 @@ void sde::engine::GPU::CudaBuilder<Num>::append_milstein() {
     source += " t = t0 + dt * step;\n";
     source += "        ";
     source += var_name;
-    source += " dw = ";
+    source += " dW = ";
     if constexpr (std::is_same_v<Num, float>) {
-        source += "sqrtf(dt) * curand_normal(&state);\n";
+        source += "sqrtf(dt) * rng.normal();\n";
     }else {
-        source += "sqrt(dt) * curand_normal(&state);\n";
+        source += "sqrt(dt) * rng.normal();\n";
     }
-    source += "        X = X + drift(X,t) * dt + diffusion(X,t) * dw + .5";
+    source += "        X = X + drift(X,t) * dt + diffusion(X,t) * dW + .5";
     if constexpr (std::is_same_v<Num, float>) {
         source += "f";
     }
-    source += " * diffusion(X,t) * diffusion_prime(X,t) * (dw * dw - dt);\n";
+    source += " * diffusion(X,t) * diffusion_prime(X,t) * (dW * dW - dt);\n";
     source += "        paths[path_idx + step * num_paths] = X;\n";
     source += "    }\n}\n";
 }

@@ -35,13 +35,13 @@ namespace sde {
             Num* ptr;
             size_t stride;
 
+        public:
             using iterator_category = std::random_access_iterator_tag;
             using difference_type = std::ptrdiff_t;
             using value_type = Num;
             using pointer = Num*;
             using reference = Num&;
 
-        public:
             Iterator(pointer ptr, size_t stride) : ptr(ptr), stride(stride) {}
 
             Iterator& operator++(){ptr += stride; return *this;}
@@ -153,14 +153,14 @@ namespace sde {
         }
 
         class Iterator {
+            Num* ptr;
+        public:
             using iterator_category = std::contiguous_iterator_tag;
             using difference_type = std::ptrdiff_t;
             using value_type = Num;
             using pointer = Num*;
             using reference = Num&;
 
-            pointer ptr;
-        public:
             explicit Iterator(pointer ptr) : ptr(ptr) {}
 
             pointer operator->() { return ptr; }

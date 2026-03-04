@@ -565,8 +565,8 @@ struct Program{
         #undef DISPATCH
         #else
         size_t sp = 0;
-        auto PUSH = [&](Num v) {stack[sp++] = v;};
-        auto POP = [&](){return stack[sp--];};
+        auto PUSH = [&](Num v) -> void {stack[sp++] = v;};
+        auto POP = [&]() -> Num {return stack[--sp];};
         for(const auto& inst: instrs){
             switch(inst.op){
                 case operation::PUSH_CONST:
@@ -706,6 +706,7 @@ struct Program{
                     Num b = POP();
                     
                     PUSH(math::lse_max(b, a));
+                    break;
                 }
                 case operation::LSE_MIN: {
                     Num a = POP();
@@ -713,6 +714,7 @@ struct Program{
                     Num b = POP();
                     
                     PUSH(math::lse_min(b, a));
+                    break;
                 }
                 case operation::SOFTMAX: {
                     Num a = POP();
@@ -720,6 +722,7 @@ struct Program{
                     Num b = POP();
                     
                     PUSH(math::softmax_weight(b, a));
+                    break;
                 }
                 case operation::DONE:
                     break;

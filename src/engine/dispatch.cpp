@@ -125,6 +125,7 @@ array2d<Num> sde::AST_dispatch(Config& config) {
 #if HAS_CUDA
 template<concepts::FloatingPoint Num>
 array2d<Num> sde::GPU_dispatch(Config& config) {
+    cudaFree(0); //make runtime and driver be nice to each other
     array2d<Num> results(config.num_steps, config.num_paths, Layout::TimeMajor, config.dt, 0, 1);
     frontend::AST<Num> diff = frontend::parse<Num>(config.diffusion, config.env);
     frontend::AST<Num> drift = frontend::parse<Num>(config.drift, config.env);
