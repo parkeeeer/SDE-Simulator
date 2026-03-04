@@ -1,7 +1,7 @@
 #include "Parser.hpp"
 
 #include "math.hpp"
-
+#include "minisimd.hpp"
 using namespace sde::frontend;
 
 template<class Num>

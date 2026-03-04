@@ -2,6 +2,7 @@
 
 #include "types.hpp"
 #include "helpers.hpp"
+#include <cmath>
 
 
 namespace sde::simd {
@@ -116,12 +117,12 @@ namespace sde::simd {
 #elif SDE_HAS_AVX
     template<>
     inline simd<float> fma(simd<float> a, simd<float> b, simd<float> c) {
-        return simd<float>(_m256_fmadd_ps(a.v,b.v,c.v));
+        return simd<float>(_mm256_fmadd_ps(a.v,b.v,c.v));
     }
 
     template<>
     inline simd<double> fma(simd<double> a, simd<double> b, simd<double> c) {
-        return simd<double>(_m256_fmadd_pd(a.v,b.v,c.v));
+        return simd<double>(_mm256_fmadd_pd(a.v,b.v,c.v));
     }
 
     template<>
@@ -141,7 +142,7 @@ namespace sde::simd {
 
     template<>
     inline simd<double> round(simd<double> x) {
-        return simd<double>{_mm256_round_pd(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)}
+        return simd<double>{_mm256_round_pd(x.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)};
     }
 
     template<>
@@ -172,23 +173,23 @@ namespace sde::simd {
     }
 
     template<>
-    inline simd<double> max(simd<double> a, simd<double> b) {
-        return simd<double>(_mm256_max_pd(a.v, b.v));
+    inline simd<double> min(simd<double> a, simd<double> b) {
+        return simd<double>(_mm256_min_pd(a.v, b.v));
     }
 
     template<>
     inline simd<float> detail::pow2(simd<float> x) {
         __m256i x_int = _mm256_cvtps_epi32(x.v);
-        __m256i bias = _mm256_add_epi32(x_to_int, _mm256_set1_epi32(127));
-        __m256 exponent = _mm256_slli_epi32(bias, 23);
+        __m256i bias = _mm256_add_epi32(x_int, _mm256_set1_epi32(127));
+        __m256i exponent = _mm256_slli_epi32(bias, 23);
 
         return simd<float>{_mm256_castsi256_ps(exponent)};
     }
 
     template<>
-    inline simd<double> detail::pow2(simf<double> x) {
+    inline simd<double> detail::pow2(simd<double> x) {
         __m128d lo_pd = _mm256_castpd256_pd128(x.v);
-        __m128d hi_pd = _mm256_extractf128_pd(x.v, 1)
+        __m128d hi_pd = _mm256_extractf128_pd(x.v, 1);
 
         __m128i lo_i32 = _mm_cvttpd_epi32(lo_pd);
         __m128i hi_i32 = _mm_cvttpd_epi32(hi_pd);
@@ -201,6 +202,70 @@ namespace sde::simd {
         __m256i exponent = _mm256_slli_epi64(bias, 52);
 
         return simd<double>{_mm256_castsi256_pd(exponent)};
+    }
+
+    template<>
+    inline simd<float> floor(simd<float> a) {
+        return simd<float>{_mm256_floor_ps(a.v)};
+    }
+
+    template<>
+    inline simd<double> floor(simd<double> a) {
+        return simd<double>{_mm256_floor_pd(a.v)};
+    }
+
+    template<>
+    inline simd<float> ceil(simd<float> a) {
+        return simd<float>{_mm256_ceil_ps(a.v)};
+    }
+
+    template<>
+    inline simd<double> ceil(simd<double> a) {
+        return simd<double>{_mm256_ceil_pd(a.v)};
+    }
+
+    template<>
+inline simd<float> detail::get_mantissa(simd<float> x) {
+        __m256i to_int = _mm256_castps_si256(x.v);
+        __m256i mantissa_mask = _mm256_set1_epi32(0x807FFFFF);
+        __m256i exp_zero = _mm256_set1_epi32(127 << 23);
+        __m256i mantissa = _mm256_and_si256(to_int, mantissa_mask);
+        __m256i result = _mm256_or_si256(exp_zero, mantissa);
+        return simd<float>{_mm256_castsi256_ps(result)};
+    }
+
+    template<>
+    inline simd<double> detail::get_mantissa(simd<double> x) {
+        __m256i to_int = _mm256_castpd_si256(x.v);
+        __m256i mantissa_mask = _mm256_set1_epi64x(0x800FFFFFFFFFFFFFULL);
+        __m256i exp_zero = _mm256_set1_epi64x(1023ULL << 52);
+        __m256i mantissa = _mm256_and_si256(to_int, mantissa_mask);
+        __m256i result = _mm256_or_si256(exp_zero, mantissa);
+        return simd<double>{_mm256_castsi256_pd(result)};
+    }
+
+    template<>
+    inline simd<float> detail::get_exponent(simd<float> x) {
+        __m256i to_int = _mm256_castps_si256(x.v);
+        __m256i exp_bits = _mm256_srli_epi32(to_int, 23);
+        __m256i exp_mask = _mm256_set1_epi32(0xFF);
+        __m256i biased_exp = _mm256_and_si256(exp_bits, exp_mask);
+        __m256i unbiased = _mm256_sub_epi32(biased_exp, _mm256_set1_epi32(127));
+        return simd<float>{_mm256_cvtepi32_ps(unbiased)};
+    }
+
+    template<>
+    inline simd<double> detail::get_exponent(simd<double> x) {
+        __m256i to_int = _mm256_castpd_si256(x.v);
+        __m256i exp_bits = _mm256_srli_epi64(to_int, 52);
+        __m256i exp_mask = _mm256_set1_epi64x(0x7FF);
+        __m256i biased_exp = _mm256_and_si256(exp_bits, exp_mask);
+        __m256i unbiased = _mm256_sub_epi64(biased_exp, _mm256_set1_epi64x(1023));
+        __m128i lo = _mm256_castsi256_si128(unbiased);
+        __m128i hi = _mm256_extracti128_si256(unbiased, 1);
+        __m128d lo_d = _mm_cvtepi32_pd(lo);
+        __m128d hi_d = _mm_cvtepi32_pd(hi);
+        return simd<double>{_mm256_set_m128d(hi_d, lo_d)};
     }
 #elif SDE_HAS_NEON
     template<>
@@ -356,11 +421,11 @@ namespace sde::simd {
     }
 #else
     inline simd<float> fma(simd<float> a, simd<float> b, simd<float> c) {
-        return std::fmaf(a,b,c);
+        return std::fmaf(a.v,b.v,c.v);
     }
 
     inline simd<double> fma(simd<double> a, simd<double> b, simd<double> c) {
-        return std::fma(a,b,c);
+        return std::fma(a.v,b.v,c.v);
     }
 #endif
 

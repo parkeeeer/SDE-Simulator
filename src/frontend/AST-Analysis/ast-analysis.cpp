@@ -1,5 +1,6 @@
 #include "ast-analysis.hpp"
 #include "math.hpp"
+#include "minisimd.hpp"
 
 
 using namespace sde;

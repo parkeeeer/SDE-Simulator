@@ -4,6 +4,7 @@
 #include "Parser.hpp"
 #include "Variable_Environment.hpp"
 #include "AST.hpp"
+#include "minisimd.hpp"
 
 namespace sde::frontend {
 

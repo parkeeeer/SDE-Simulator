@@ -6,6 +6,7 @@
 #include <iostream>
 #include <utility>
 #include "math.hpp"
+#include "minisimd.hpp"
 
 
 
@@ -230,168 +231,159 @@ struct Program{
         }
         #undef DISPATCH
         #else
-        std::vector<Num> stack;
-        stack.reserve(max_stack_size);
+        size_t sp = 0;
+        auto PUSH = [&](Num v) {stack[sp++] = v;};
+        auto POP = [&](){return stack[sp--];};
         for(const auto& inst: instrs){
             switch(inst.op){
                 case operation::PUSH_CONST:
-                    stack.push_back(constants[inst.arg]);
+                    PUSH(constants[inst.arg]);
                     break;
                 case operation::LOAD_X:
-                    stack.push_back(X);
+                    PUSH(X);
                     break;
                 case operation::LOAD_T:
-                    stack.push_back(t);
+                    PUSH(t);
                     break;
                 case operation::ADD:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b + a);
+                    Num a = POP();
+                    Num b = POP();
+                    PUSH(b + a);
                     break;
                 }
                 case operation::SUB:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b - a);
+                    Num a = POP();
+                    Num b = POP();
+                    PUSH(b - a);
                     break;
                 }
                 case operation::MUL:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b * a);
+                    Num a = POP();
+                    Num b = POP();
+                    PUSH(b * a);
                     break;
                 }
                 case operation::DIV:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b / a);
+                    Num a = POP();
+                    Num b = POP();
+                    PUSH(b / a);
                     break;
                 }
                 case operation::POW:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::pow(b, a));
+                    Num a = POP();
+                    Num b = POP();
+                    PUSH(math::pow(b, a));
                     break;
                 }
                 case operation::NEGATE:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(-a);
+                    Num a = POP();
+                    
+                    PUSH(-a);
                     break;
                 }
                 case operation::ABS:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::abs(a));
+                    Num a = POP();
+                    
+                    PUSH(math::abs(a));
                     break;
                 }
                 case operation::SIN:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::sin(a));
+                    Num a = POP();
+                    
+                    PUSH(math::sin(a));
                     break;
                 }
                 case operation::COS:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::cos(a));
+                    Num a = POP();
+                    
+                    PUSH(math::cos(a));
                     break;
                 }
                 case operation::TAN:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::tan(a));
+                    Num a = POP();
+                    
+                    PUSH(math::tan(a));
                     break;
                 }
                 case operation::SINH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::sinh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::sinh(a));
                     break;
                 }
                 case operation::COSH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::cosh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::cosh(a));
                     break;
                 }
                 case operation::TANH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::tanh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::tanh(a));
                     break;
                 }
                 case operation::EXP:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::exp(a));
+                    Num a = POP();
+                    
+                    PUSH(math::exp(a));
                     break;
                 }
                 case operation::LOG:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::log(a));
+                    Num a = POP();
+                    
+                    PUSH(math::log(a));
                     break;
                 }
                 case operation::SQRT:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::sqrt(a));
+                    Num a = POP();
+                    
+                    PUSH(math::sqrt(a));
                     break;
                 }
                 case operation::MAX:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::max(a, b));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::max(a, b));
                     break;
                 }
                 case operation::MIN: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::min(a, b));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::min(a, b));
                     break;
                 }
                 case operation::LSE_MAX: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::lse_max(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::lse_max(b, a));
                 }
                 case operation::LSE_MIN: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::lse_min(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::lse_min(b, a));
                 }
                 case operation::SOFTMAX: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::softmax_weight(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::softmax_weight(b, a));
                 }
                 case operation::DONE:
                     break;
             }
         }
-        Num ret = stack.back();
-        stack.pop_back();
+        Num ret = POP();
+        
         return ret;
         #endif
     }
@@ -572,168 +564,169 @@ struct Program{
         }
         #undef DISPATCH
         #else
-        std::vector<Num> stack;
-        stack.reserve(max_stack_size);
+        size_t sp = 0;
+        auto PUSH = [&](Num v) {stack[sp++] = v;};
+        auto POP = [&](){return stack[sp--];};
         for(const auto& inst: instrs){
             switch(inst.op){
                 case operation::PUSH_CONST:
-                    stack.push_back(constants[inst.arg]);
+                    PUSH(constants[inst.arg]);
                     break;
                 case operation::LOAD_X:
-                    stack.push_back(X);
+                    PUSH(X);
                     break;
                 case operation::LOAD_T:
-                    stack.push_back(t);
+                    PUSH(t);
                     break;
                 case operation::ADD:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b + a);
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(b + a);
                     break;
                 }
                 case operation::SUB:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b - a);
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(b - a);
                     break;
                 }
                 case operation::MUL:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(b * a);
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(b * a);
                     break;
                 }
                 case operation::DIV:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::safe_div(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::safe_div(b, a));
                     break;
                 }
                 case operation::POW:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::pow(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::pow(b, a));
                     break;
                 }
                 case operation::NEGATE:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(-a);
+                    Num a = POP();
+                    
+                    PUSH(-a);
                     break;
                 }
                 case operation::ABS:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::abs(a));
+                    Num a = POP();
+                    
+                    PUSH(math::abs(a));
                     break;
                 }
                 case operation::SIN:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::sin(a));
+                    Num a = POP();
+                    
+                    PUSH(math::sin(a));
                     break;
                 }
                 case operation::COS:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::cos(a));
+                    Num a = POP();
+                    
+                    PUSH(math::cos(a));
                     break;
                 }
                 case operation::TAN:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::tan(a));
+                    Num a = POP();
+                    
+                    PUSH(math::tan(a));
                     break;
                 }
                 case operation::SINH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::sinh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::sinh(a));
                     break;
                 }
                 case operation::COSH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::cosh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::cosh(a));
                     break;
                 }
                 case operation::TANH: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::tanh(a));
+                    Num a = POP();
+                    
+                    PUSH(math::tanh(a));
                     break;
                 }
                 case operation::EXP:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::exp(a));
+                    Num a = POP();
+                    
+                    PUSH(math::exp(a));
                     break;
                 }
                 case operation::LOG:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::safe_log(a));
+                    Num a = POP();
+                    
+                    PUSH(math::safe_log(a));
                     break;
                 }
                 case operation::SQRT:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::safe_sqrt(a));
+                    Num a = POP();
+                    
+                    PUSH(math::safe_sqrt(a));
                     break;
                 }
                 case operation::MAX:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::max(a, b));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::max(a, b));
                     break;
                 }
                 case operation::MIN:{
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::min(a, b));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::min(a, b));
                     break;
                 }
                 case operation::LSE_MAX: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::lse_max(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::lse_max(b, a));
                 }
                 case operation::LSE_MIN: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::lse_min(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::lse_min(b, a));
                 }
                 case operation::SOFTMAX: {
-                    Num a = stack.back();
-                    stack.pop_back();
-                    Num b = stack.back();
-                    stack.pop_back();
-                    stack.push_back(math::softmax_weight(b, a));
+                    Num a = POP();
+                    
+                    Num b = POP();
+                    
+                    PUSH(math::softmax_weight(b, a));
                 }
                 case operation::DONE:
                     break;
             }
         }
-        Num ret = stack.back();
-        stack.pop_back();
+        Num ret = POP();
+        
         return ret;
         #endif
     }

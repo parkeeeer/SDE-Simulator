@@ -65,7 +65,7 @@ namespace sde::simd {
     }
 
     inline simd<double> simd<double>::load(const double* ptr) {
-        v = _mm256_load_pd(ptr);
+        return simd{_mm256_load_pd(ptr)};
     }
 
     inline void simd<double>::store(double* ptr) const{

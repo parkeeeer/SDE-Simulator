@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "rng.hpp"
+#include <numbers>
 
 
 
@@ -59,7 +60,7 @@ namespace sde::rng {
         }
 
         const Num r = std::sqrt(-2.0 * std::log(i));
-        const Num theta = 2.0 * static_cast<Num>(M_PI) * j;
+        const Num theta = 2.0 * static_cast<Num>(std::numbers::pi) * j;
         
         Num sinth, costh;
         sincos(theta, sinth, costh);

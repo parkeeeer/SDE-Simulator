@@ -12,6 +12,7 @@
 #elif HAS_CUDA
 #include "CudaCodegen.hpp"
 #include "GPUengine.hpp"
+#include <cuda_runtime.h>
 #endif
 
 namespace py = pybind11;
@@ -52,9 +53,9 @@ public:
         if (backend == "gpu") {
 #if HAS_CUDA
             if (precision == "float" || precision == "float32") {
-                return simulate_cuda<float>(num_paths, num_steps, dt, initial_value, method, real_seed, precision, env);
+                return simulate_cuda<float>(num_paths, num_steps, dt, initial_value, method, real_seed, env);
             } else if (precision == "double" || precision == "float64") {
-                return simulate_cuda<double>(num_paths, num_steps, dt, initial_value, method, real_seed, precision, env);
+                return simulate_cuda<double>(num_paths, num_steps, dt, initial_value, method, real_seed, env);
             } else {
                 throw std::runtime_error("Unknown precision: " + precision);
             }
@@ -72,9 +73,9 @@ public:
         } else if (backend == "cuda") {
 #if HAS_CUDA
             if (precision == "float" || precision == "float32") {
-                return simulate_cuda<float>(num_paths, num_steps, dt, initial_value, method, real_seed, precision, env);
+                return simulate_cuda<float>(num_paths, num_steps, dt, initial_value, method, real_seed, env);
             } else if (precision == "double" || precision == "float64") {
-                return simulate_cuda<double>(num_paths, num_steps, dt, initial_value, method, real_seed, precision, env);
+                return simulate_cuda<double>(num_paths, num_steps, dt, initial_value, method, real_seed, env);
             } else {
                 throw std::runtime_error("Unknown precision: " + precision);
             }
@@ -151,7 +152,7 @@ pybind11::array_t<Num> SDESimulator::simulate_cuda(size_t num_paths, size_t num_
     }
 
     Num* paths;
-    size_t size = config.num_paths * config.num_steps * sizeof(Num);
+    size_t size = num_paths * num_steps * sizeof(Num);
     cudaMalloc(&paths, size);
 
     sde::engine::GPU::CudaProgram<Num> prog(builder.get_source());

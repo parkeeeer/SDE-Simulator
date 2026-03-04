@@ -11,20 +11,20 @@
 #define SIMD_INLINE inline
 #endif
 
-#ifdef __AVX512F__
+#ifdef HAS_AVX512
 #define SDE_HAS_AVX512 1
 #else
 #define SDE_HAS_AVX512 0
 #endif
 
-#ifdef __AVX__
+#ifdef HAS_AVX2
 #define SDE_HAS_AVX 1
 #else
 #define SDE_HAS_AVX 0
 #endif
 
 
-#ifdef __ARM_NEON
+#ifdef HAS_NEON
 #define SDE_HAS_NEON 1
 #else
 #define SDE_HAS_NEON 0
@@ -55,7 +55,11 @@ using double_mask = uint64x2_t;
 #define SDE_FLOAT_WIDTH 4
 #define SDE_DOUBLE_WIDTH 2
 #else
-#warning "no SIMD detected"
+#ifdef _MSC_VER
+#pragma message("warning: no SIMD support available, falling back to scalar")
+#else
+#warning "no SIMD support available, falling back to scalar"
+#endif
 using float_lane = float;
 using double_lane = double;
 using float_mask = bool;

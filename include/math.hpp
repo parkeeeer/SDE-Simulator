@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "minisimd.hpp"
 #include <cmath>
 
 

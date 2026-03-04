@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-#include "../src/minisimd/minisimd.hpp"
+#include "minisimd.hpp"
 
 
 //#include <type_traits>

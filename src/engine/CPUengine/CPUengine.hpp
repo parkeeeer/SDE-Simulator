@@ -8,6 +8,7 @@
 #include <rng.hpp>
 #include <utils.hpp>
 #include <concepts.hpp>
+#include "minisimd.hpp"
 
 #include <thread>
 

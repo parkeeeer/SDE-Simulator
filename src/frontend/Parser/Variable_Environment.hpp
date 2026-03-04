@@ -1,10 +1,13 @@
 #pragma once
 
 
+
+
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <iostream>
+#include <numbers>
 
 namespace sde::frontend {
 
@@ -28,16 +31,16 @@ class Environment{
     std::unordered_map<std::string, Num> map;
     public:
     Environment(){
-        add_param("pi", M_PI);
-        add_param("tau", M_PI * 2);
-        add_param("e", M_E);
+        add_param("pi", std::numbers::pi);
+        add_param("tau", std::numbers::pi * 2);
+        add_param("e", std::numbers::e);
     }
 
     Environment(const std::unordered_map<std::string, Num>&& a) {
         map = a;
-        add_param("pi", M_PI);
-        add_param("tau", M_PI * 2);
-        add_param("e", M_E);
+        add_param("pi", std::numbers::pi);
+        add_param("tau", std::numbers::pi * 2);
+        add_param("e", std::numbers::e);
     }
 
     Num get_param(const std::string& name) const{

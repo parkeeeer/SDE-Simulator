@@ -9,23 +9,23 @@ namespace sde::simd {
         return simd(*ptr);
     }
 
-    inline void simd<float>::store(float* ptr) {
+    inline void simd<float>::store(float* ptr) const {
         *ptr = v;
     }
 
-    inline simd<float> simd<float>::operator+(const simd& other) const {
+    inline simd<float> simd<float>::operator+(simd other) const {
         return simd(v + other.v);
     }
 
-    inline simd<float> simd<float>::operator-(const simd& other) const {
+    inline simd<float> simd<float>::operator-(simd other) const {
         return simd(v - other.v);
     }
 
-    inline simd<float> simd<float>::operator*(const simd& other) const {
+    inline simd<float> simd<float>::operator*(simd other) const {
         return simd(v * other.v);
     }
 
-    inline simd<float> simd<float>::operator/(const simd& other) const {
+    inline simd<float> simd<float>::operator/(simd other) const {
         return simd(v / other.v);
     }
 
@@ -33,22 +33,22 @@ namespace sde::simd {
         return simd(-v);
     }
 
-    inline simd<float>& simd<float>::operator+=(const simd& other) {
+    inline simd<float>& simd<float>::operator+=(simd other) {
         v += other.v;
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator-=(const simd& other) {
+    inline simd<float>& simd<float>::operator-=(simd other) {
         v -= other.v;
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator*=(const simd& other) {
+    inline simd<float>& simd<float>::operator*=(simd other) {
         v *= other.v;
         return *this;
     }
 
-    inline simd<float>& simd<float>::operator/=(const simd& other) {
+    inline simd<float>& simd<float>::operator/=(simd other) {
         v /= other.v;
         return *this;
     }
@@ -65,23 +65,23 @@ namespace sde::simd {
         return simd(*ptr);
     }
 
-    inline void simd<double>::store(double* ptr) {
+    inline void simd<double>::store(double* ptr) const {
         *ptr = v;
     }
 
-    inline simd<double> simd<double>::operator+(const simd& other) const {
+    inline simd<double> simd<double>::operator+(simd other) const {
         return simd(v + other.v);
     }
 
-    inline simd<double> simd<double>::operator-(const simd& other) const {
+    inline simd<double> simd<double>::operator-(simd other) const {
         return simd(v - other.v);
     }
 
-    inline simd<double> simd<double>::operator*(const simd& other) const {
+    inline simd<double> simd<double>::operator*(simd other) const {
         return simd(v * other.v);
     }
 
-    inline simd<double> simd<double>::operator/(const simd& other) const {
+    inline simd<double> simd<double>::operator/(simd other) const {
         return simd(v / other.v);
     }
 
@@ -89,22 +89,22 @@ namespace sde::simd {
         return simd(-v);
     }
 
-    inline simd<double>& simd<double>::operator+=(const simd& other) {
+    inline simd<double>& simd<double>::operator+=(simd other) {
         v += other.v;
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator-=(const simd& other) {
+    inline simd<double>& simd<double>::operator-=(simd other) {
         v -= other.v;
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator*=(const simd& other) {
+    inline simd<double>& simd<double>::operator*=(simd other) {
         v *= other.v;
         return *this;
     }
 
-    inline simd<double>& simd<double>::operator/=(const simd& other) {
+    inline simd<double>& simd<double>::operator/=(simd other) {
         v /= other.v;
         return *this;
     }
