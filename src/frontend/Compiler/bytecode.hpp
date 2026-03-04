@@ -233,7 +233,7 @@ struct Program{
         #else
         size_t sp = 0;
         auto PUSH = [&](Num v) {stack[sp++] = v;};
-        auto POP = [&](){return stack[sp--];};
+        auto POP = [&](){return stack[--sp];};
         for(const auto& inst: instrs){
             switch(inst.op){
                 case operation::PUSH_CONST:
